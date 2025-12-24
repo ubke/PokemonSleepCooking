@@ -14,6 +14,7 @@
             --green: #4CAF50;
             --energy-color: #F5A623;
             --alert-color: #e74c3c;
+            --all-btn-active: #555555;
         }
         body {
             font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -42,8 +43,22 @@
         .filter-btn {
             padding: 6px 12px; border: 1px solid #ddd; border-radius: 15px; background: #fff; cursor: pointer; font-weight: bold; font-size: 0.8rem; transition: all 0.2s; color: #666;
         }
+        
+        /* カテゴリボタンの選択状態 */
         .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .filter-btn.all-btn { background: #666; color: white; border-color: #666; }
+        
+        /* 全選択ボタンのスタイル（OFF時） */
+        .filter-btn.all-btn { 
+            border-color: #666; 
+            color: #666;
+            background: #fff;
+        }
+        /* 全選択ボタンのスタイル（ON時） */
+        .filter-btn.all-btn.active { 
+            background: var(--all-btn-active); 
+            color: white; 
+            border-color: var(--all-btn-active);
+        }
 
         /* Energy Input */
         .energy-filter {
@@ -91,7 +106,6 @@
         }
         .recipe-card.selected { border-color: var(--primary); background-color: #f0f8ff; }
         
-        /* 料理画像 */
         .recipe-img {
             width: 50px;
             height: 50px;
@@ -173,7 +187,7 @@
 
     <div class="controls-area">
         <div class="filters">
-            <button class="filter-btn all-btn" onclick="setCategory('all')">全選択</button>
+            <button class="filter-btn all-btn active" id="btn-all" onclick="setCategory('all')">全選択</button>
             <button class="filter-btn active" id="btn-カレー" onclick="setCategory('カレー')">カレー</button>
             <button class="filter-btn active" id="btn-サラダ" onclick="setCategory('サラダ')">サラダ</button>
             <button class="filter-btn active" id="btn-デザート" onclick="setCategory('デザート')">デザート</button>
@@ -347,10 +361,18 @@
         }
     }
 
-    // === フィルター切替 ===
+    // === フィルター切替 (複数選択対応) ===
     function setCategory(type) {
+        const types = ['カレー', 'サラダ', 'デザート'];
         if (type === 'all') {
-            activeCategories = new Set(['カレー', 'サラダ', 'デザート']);
+            const isAllSelected = types.every(t => activeCategories.has(t));
+            if (isAllSelected) {
+                // OFF: 全解除
+                activeCategories.clear();
+            } else {
+                // ON: 全選択
+                activeCategories = new Set(types);
+            }
         } else {
             if (activeCategories.has(type)) {
                 activeCategories.delete(type);
@@ -363,7 +385,10 @@
     }
 
     function updateFilterButtons() {
-        ['カレー', 'サラダ', 'デザート'].forEach(type => {
+        const types = ['カレー', 'サラダ', 'デザート'];
+        
+        // Update category buttons
+        types.forEach(type => {
             const btn = document.getElementById(`btn-${type}`);
             if (activeCategories.has(type)) {
                 btn.classList.add('active');
@@ -371,6 +396,15 @@
                 btn.classList.remove('active');
             }
         });
+
+        // Update All button
+        const btnAll = document.getElementById('btn-all');
+        const isAllActive = types.every(t => activeCategories.has(t));
+        if (isAllActive) {
+            btnAll.classList.add('active');
+        } else {
+            btnAll.classList.remove('active');
+        }
     }
 
     // ★隠れた選択済み料理をチェックして表示更新
