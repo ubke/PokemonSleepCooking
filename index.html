@@ -39,9 +39,12 @@
         /* Filter Buttons */
         .filters { display: flex; gap: 5px; justify-content: center; margin-bottom: 10px; flex-wrap: wrap; }
         .filter-btn {
-            padding: 6px 12px; border: none; border-radius: 15px; background: #eee; cursor: pointer; font-weight: bold; font-size: 0.8rem; transition: background 0.2s;
+            padding: 6px 12px; border: 1px solid #ddd; border-radius: 15px; background: #fff; cursor: pointer; font-weight: bold; font-size: 0.8rem; transition: all 0.2s; color: #666;
         }
-        .filter-btn.active { background: var(--primary); color: white; }
+        /* 選択されている状態のスタイル */
+        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        /* 全選択ボタンのスタイル */
+        .filter-btn.all-btn { background: #666; color: white; border-color: #666; }
 
         /* Energy Input */
         .energy-filter {
@@ -54,7 +57,7 @@
             padding: 5px; border: 1px solid #ccc; border-radius: 6px; width: 80px; text-align: center; font-size: 0.9rem;
         }
 
-        /* Recipe Grid: コンパクト設定 */
+        /* Recipe Grid */
         .recipe-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -77,7 +80,6 @@
         }
         .recipe-card.selected { border-color: var(--primary); background-color: #f0f8ff; }
         
-        /* 料理画像の設定 */
         .recipe-img {
             width: 50px;
             height: 50px;
@@ -159,10 +161,10 @@
 
     <div class="controls-area">
         <div class="filters">
-            <button class="filter-btn active" onclick="setCategory('all')">すべて</button>
-            <button class="filter-btn" onclick="setCategory('カレー')">カレー</button>
-            <button class="filter-btn" onclick="setCategory('サラダ')">サラダ</button>
-            <button class="filter-btn" onclick="setCategory('デザート')">デザート</button>
+            <button class="filter-btn all-btn" onclick="setCategory('all')">全選択</button>
+            <button class="filter-btn active" id="btn-カレー" onclick="setCategory('カレー')">カレー</button>
+            <button class="filter-btn active" id="btn-サラダ" onclick="setCategory('サラダ')">サラダ</button>
+            <button class="filter-btn active" id="btn-デザート" onclick="setCategory('デザート')">デザート</button>
         </div>
         
         <div class="energy-filter">
@@ -302,7 +304,8 @@
 
     // === アプリの状態 ===
     let state = {};
-    let currentFilterType = 'all';
+    // 初期状態は全選択
+    let activeCategories = new Set(['カレー', 'サラダ', 'デザート']);
 
     // === 初期化 ===
     function init() {
@@ -312,22 +315,36 @@
         } else {
             RECIPES.forEach(r => state[r.id] = 0);
         }
+        updateFilterButtons();
         applyFilters();
         updateCalculation();
     }
 
-    // === フィルタリングと描画 ===
+    // === フィルター切替 (複数選択対応) ===
     function setCategory(type) {
-        currentFilterType = type;
-        
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        const btns = document.querySelectorAll('.filter-btn');
-        if(type === 'all') btns[0].classList.add('active');
-        if(type === 'カレー') btns[1].classList.add('active');
-        if(type === 'サラダ') btns[2].classList.add('active');
-        if(type === 'デザート') btns[3].classList.add('active');
-
+        if (type === 'all') {
+            activeCategories = new Set(['カレー', 'サラダ', 'デザート']);
+        } else {
+            if (activeCategories.has(type)) {
+                activeCategories.delete(type);
+            } else {
+                activeCategories.add(type);
+            }
+        }
+        updateFilterButtons();
         applyFilters();
+    }
+
+    function updateFilterButtons() {
+        // 各ボタンのクラスを更新
+        ['カレー', 'サラダ', 'デザート'].forEach(type => {
+            const btn = document.getElementById(`btn-${type}`);
+            if (activeCategories.has(type)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
     }
 
     function applyFilters() {
@@ -337,7 +354,8 @@
         container.innerHTML = '';
 
         const filtered = RECIPES.filter(r => {
-            const typeMatch = (currentFilterType === 'all' || r.type === currentFilterType);
+            // カテゴリが含まれているかチェック
+            const typeMatch = activeCategories.has(r.type);
             const energyMatch = r.energy > threshold; 
             return typeMatch && energyMatch;
         });
