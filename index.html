@@ -247,10 +247,24 @@
             padding: 10px 0; border-bottom: 1px solid #eee;
         }
         .saved-set-item:last-child { border-bottom: none; }
-        .set-name { font-weight: bold; font-size: 0.95rem; }
-        .set-actions { display: flex; gap: 8px; }
+        
+        /* Clickable set name styles */
+        .set-name { 
+            font-weight: bold; font-size: 0.95rem; cursor: pointer; 
+            flex: 1; /* 名前エリアを広く取る */
+            padding: 5px 0;
+        }
+        .set-name:hover {
+            color: var(--primary); text-decoration: underline;
+        }
+
+        .set-actions { display: flex; gap: 6px; }
+        
         .load-btn {
             background: #4CAF50; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold;
+        }
+        .rename-btn {
+            background: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;
         }
         .delete-btn {
             background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;
@@ -264,7 +278,7 @@
     <h1>🥘 PokemonSleepCooking</h1>
 
     <div class="controls-area">
-        <button class="set-manager-btn" onclick="openModal()">📁 料理セットの保存・呼出</button>
+        <button class="set-manager-btn" onclick="openModal()">📁 料理セットの管理</button>
 
         <div class="filters">
             <button class="filter-btn all-btn active" id="btn-all" onclick="setCategory('all')">全選択</button>
@@ -869,8 +883,7 @@ const RECIPES = [
         }
     },
     {
-        "id": "サラダ_46",
-        "name": "マメハムサラダ",
+        "id": "サラダ_46", "name": "マメハムサラダ",
         "type": "サラダ",
         "energy": 978,
         "ingredients": {
@@ -1091,8 +1104,7 @@ const RECIPES = [
         }
     },
     {
-        "id": "デザート_66",
-        "name": "かるわざソイケーキ",
+        "id": "デザート_66", "name": "かるわざソイケーキ",
         "type": "デザート",
         "energy": 1924,
         "ingredients": {
@@ -1101,8 +1113,7 @@ const RECIPES = [
         }
     },
     {
-        "id": "デザート_67",
-        "name": "マイペースやさいジュース",
+        "id": "デザート_67", "name": "マイペースやさいジュース",
         "type": "デザート",
         "energy": 1924,
         "ingredients": {
@@ -1111,8 +1122,7 @@ const RECIPES = [
         }
     },
     {
-        "id": "デザート_68",
-        "name": "ひのこのジンジャーティー",
+        "id": "デザート_68", "name": "ひのこのジンジャーティー",
         "type": "デザート",
         "energy": 1913,
         "ingredients": {
@@ -1121,8 +1131,7 @@ const RECIPES = [
         }
     },
     {
-        "id": "デザート_69",
-        "name": "じゅくせいスイートポテト",
+        "id": "デザート_69", "name": "じゅくせいスイートポテト",
         "type": "デザート",
         "energy": 1907,
         "ingredients": {
@@ -1131,38 +1140,28 @@ const RECIPES = [
         }
     },
     {
-        "id": "デザート_70",
-        "name": "ねがいごとアップルパイ",
-        "type": "デザート",
-        "energy": 1748,
-        "ingredients": {
+        "id": "デザート_70", "name": "ねがいごとアップルパイ",
+        "type": "デザート", "energy": 1748, "ingredients": {
             "モーモーミルク": 4,
             "とくせんリンゴ": 12
         }
     },
     {
-        "id": "デザート_71",
-        "name": "クラフトサイコソーダ",
-        "type": "デザート",
-        "energy": 1079,
-        "ingredients": {
+        "id": "デザート_71", "name": "クラフトサイコソーダ",
+        "type": "デザート", "energy": 1079, "ingredients": {
             "あまいミツ": 9
         }
     },
     {
-        "id": "デザート_72",
-        "name": "とくせんリンゴジュース",
-        "type": "デザート", "energy": 855,
-        "ingredients": {
+        "id": "デザート_72", "name": "とくせんリンゴジュース",
+        "type": "デザート", "energy": 855, "ingredients": {
             "とくせんリンゴ": 8
         }
     },
     {
-        "id": "デザート_73",
-        "name": "モーモーホットミルク",
+        "id": "デザート_73", "name": "モーモーホットミルク",
         "type": "デザート",
-        "energy": 814,
-        "ingredients": {
+        "energy": 814, "ingredients": {
             "モーモーミルク": 7
         }
     }
@@ -1257,6 +1256,30 @@ const RECIPES = [
         }
     }
 
+    // ★追加: 名前変更機能
+    function renameSet(oldName) {
+        const newName = prompt("セット名の変更:", oldName);
+        if(newName && newName.trim() && newName !== oldName) {
+            if(savedSets[newName]) {
+                alert("同名のセットが既に存在します");
+                return;
+            }
+            
+            // 順序を保持しながらキーを変更
+            const newSavedSets = {};
+            Object.keys(savedSets).forEach(key => {
+                if(key === oldName) {
+                    newSavedSets[newName] = savedSets[key];
+                } else {
+                    newSavedSets[key] = savedSets[key];
+                }
+            });
+            savedSets = newSavedSets;
+            localStorage.setItem('pokeSleepSavedSets', JSON.stringify(savedSets));
+            renderSavedSets();
+        }
+    }
+
     function renderSavedSets() {
         const list = document.getElementById('saved-sets-list');
         list.innerHTML = '';
@@ -1266,8 +1289,9 @@ const RECIPES = [
             li.className = 'saved-set-item';
             
             li.innerHTML = `
-                <span class="set-name">📁 ${name}</span>
+                <span class="set-name" onclick="loadSet('${name}')" title="クリックして呼出">📁 ${name}</span>
                 <div class="set-actions">
+                    <button class="rename-btn" onclick="renameSet('${name}')">✏️</button>
                     <button class="load-btn" onclick="loadSet('${name}')">呼出</button>
                     <button class="delete-btn" onclick="deleteSet('${name}')">🗑️</button>
                 </div>
