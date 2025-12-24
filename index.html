@@ -23,7 +23,6 @@
             padding-bottom: 120px; /* Footer space */
         }
         h1 { font-size: 1.5rem; text-align: center; color: var(--primary); margin-bottom: 20px; }
-        h2 { font-size: 1.2rem; border-left: 5px solid var(--primary); padding-left: 10px; margin-top: 30px;}
         
         /* Layout */
         .container { max-width: 900px; margin: 0 auto; }
@@ -57,13 +56,13 @@
         /* Recipe Grid */
         .recipe-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 12px;
         }
         .recipe-card {
             background: var(--card-bg);
             border-radius: 12px;
-            padding: 12px;
+            padding: 10px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             text-align: center;
             cursor: pointer;
@@ -79,6 +78,15 @@
         .recipe-card:active { transform: scale(0.98); }
         .recipe-card.selected { border-color: var(--primary); background-color: #eef6ff; }
         
+        /* Image Style */
+        .recipe-img {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+            margin: 5px auto;
+            display: block;
+        }
+
         .energy-badge {
             font-size: 0.75rem;
             color: var(--energy-color);
@@ -87,10 +95,9 @@
             align-items: center;
             justify-content: center;
             gap: 2px;
-            margin-bottom: 4px;
         }
 
-        .recipe-name { font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; line-height: 1.3; min-height: 2.6em; display: flex; align-items: center; justify-content: center; }
+        .recipe-name { font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; line-height: 1.3; min-height: 2.6em; display: flex; align-items: center; justify-content: center; }
         
         .count-badge {
             background: var(--primary); color: white;
@@ -181,7 +188,7 @@
 </div>
 
 <script>
-    // === データ定義 (CSVより完全抽出・エナジー追加) ===
+    // === データ定義 ===
     const ALL_INGREDIENTS = ["あじわいキノコ", "あったかジンジャー", "あまいミツ", "あんみんトマト", "おいしいシッポ", "げきからハーブ", "ずっしりカボチャ", "つやつやアボカド", "とくせんエッグ", "とくせんリンゴ", "ふといながねぎ", "ほっこりポテト", "めざましコーヒー", "ピュアなオイル", "マメミート", "モーモーミルク", "リラックスカカオ", "ワカクサコーン", "ワカクサ大豆"];
     
     const RECIPES = [
@@ -281,7 +288,6 @@
     function setCategory(type) {
         currentFilterType = type;
         
-        // ボタンのハイライト更新
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         const btns = document.querySelectorAll('.filter-btn');
         if(type === 'all') btns[0].classList.add('active');
@@ -300,7 +306,7 @@
 
         const filtered = RECIPES.filter(r => {
             const typeMatch = (currentFilterType === 'all' || r.type === currentFilterType);
-            const energyMatch = r.energy > threshold; // 指定値「以下」を除外 ＝ 指定値「より大きい」を表示
+            const energyMatch = r.energy > threshold; 
             return typeMatch && energyMatch;
         });
 
@@ -313,8 +319,12 @@
                 increment(recipe.id);
             };
 
+            // 画像のパス： images/料理名.png
+            const imgPath = `images/${recipe.name}.png`;
+
             div.innerHTML = `
                 <div class="energy-badge">⚡ ${recipe.energy.toLocaleString()}</div>
+                <img src="${imgPath}" alt="${recipe.name}" class="recipe-img" onerror="this.style.display='none'">
                 <div class="recipe-name">${recipe.name}</div>
                 <div class="count-badge ${count === 0 ? 'hidden' : ''}">${count}</div>
                 <div class="card-controls ${count > 0 ? '' : 'hidden'}">
@@ -344,7 +354,7 @@
 
     function saveAndUpdate() {
         localStorage.setItem('pokeSleepPlanner', JSON.stringify(state));
-        applyFilters(); // 状態が変わると見た目も変わるので再描画
+        applyFilters(); 
         updateCalculation();
     }
 
@@ -366,7 +376,6 @@
             }
         });
 
-        // 必要食材リスト更新
         const neededList = document.getElementById('needed-list');
         neededList.innerHTML = '';
         const neededKeys = Object.keys(totalIngredients).sort();
@@ -382,7 +391,6 @@
             });
         }
 
-        // 余剰食材リスト更新
         const surplusList = document.getElementById('surplus-list');
         surplusList.innerHTML = '';
         const surplus = ALL_INGREDIENTS.filter(ing => !totalIngredients[ing]);
