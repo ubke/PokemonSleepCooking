@@ -27,21 +27,23 @@
         
         /* タイトルとアイコンの調整 */
         h1 { 
-            font-size: 1.2rem; 
+            font-size: 1.5rem; /* 1.2rem -> 1.5rem に拡大 */
             text-align: center; 
             color: var(--primary); 
             margin-bottom: 15px; 
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px; /* アイコンと文字の間隔 */
+            gap: 12px; /* 間隔を少し広げる */
         }
         
         /* タイトル用アイコン画像のスタイル */
         .title-icon {
-            height: 1.8em; /* 文字より少し大きく */
+            height: 2.2rem; /* 画像サイズを拡大 */
             width: auto;
             object-fit: contain;
+            border-radius: 12px; /* 角を丸くする */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 影をつけて立体感を出す */
         }
         
         .container { max-width: 900px; margin: 0 auto; }
@@ -897,7 +899,8 @@ const RECIPES = [
         }
     },
     {
-        "id": "サラダ_46", "name": "マメハムサラダ",
+        "id": "サラダ_46",
+        "name": "マメハムサラダ",
         "type": "サラダ",
         "energy": 978,
         "ingredients": {
