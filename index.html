@@ -479,8 +479,9 @@
         saveAndUpdate();
     }
 
+    // ★修正: 確認なしでリセット
     function resetAll() {
-        if(!confirm("選択内容をすべてクリアしますか？")) return;
+        // if(!confirm("選択内容をすべてクリアしますか？")) return;
         Object.keys(state).forEach(k => state[k] = 0);
         saveAndUpdate();
     }
@@ -491,10 +492,8 @@
         updateCalculation();
     }
 
-    // === 計算ロジック ===
+    // === 計算ロジック (同一カテゴリは足し算、異カテゴリは最大値) ===
     function updateCalculation() {
-        // 1. カテゴリごとの必要食材数を集計
-        // (同じカテゴリの料理は同時に作る可能性があるため足し算)
         const categoryTotals = {
             'カレー': {},
             'サラダ': {},
@@ -520,7 +519,6 @@
         });
 
         // 2. カテゴリ間で比較し、最大値を採用する
-        // (週ごとにカテゴリが変わるため、最大値があればどちらの週でも対応できる)
         const finalIngredients = {};
         
         // 集計された全ての食材キーを取得
