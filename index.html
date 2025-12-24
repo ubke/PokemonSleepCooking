@@ -22,7 +22,7 @@
             color: var(--text);
             margin: 0;
             padding: 10px;
-            padding-bottom: 140px; 
+            padding-bottom: 160px; /* フッター + 保存エリア分の余白 */
         }
         h1 { font-size: 1.2rem; text-align: center; color: var(--primary); margin-bottom: 15px; }
         
@@ -164,12 +164,45 @@
             font-size: 0.85rem;
         }
         
-        /* 色の反転を維持 */
-        .surplus-tag { background: #ffebee; color: #c62828; } /* 赤系 */
-        .needed-tag { background: #e0f2f1; color: #00695c; }  /* 緑系 */
+        .surplus-tag { background: #ffebee; color: #c62828; }
+        .needed-tag { background: #e0f2f1; color: #00695c; }
         
         .ing-name { font-weight: 500; font-size: 0.9rem; }
         .ing-count { font-weight: bold; }
+
+        /* Save/Load Area */
+        .save-load-area {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .save-input-group {
+            display: flex; gap: 10px; margin-bottom: 15px;
+        }
+        .set-name-input {
+            flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 6px;
+        }
+        .save-btn {
+            background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap;
+        }
+        .saved-sets-list {
+            list-style: none; padding: 0; margin: 0;
+        }
+        .saved-set-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 0; border-bottom: 1px solid #eee;
+        }
+        .saved-set-item:last-child { border-bottom: none; }
+        .set-name { font-weight: bold; font-size: 0.9rem; }
+        .set-actions { display: flex; gap: 8px; }
+        .load-btn {
+            background: #4CAF50; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+        }
+        .delete-btn {
+            background: #e74c3c; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+        }
 
     </style>
 </head>
@@ -210,6 +243,17 @@
             <ul id="surplus-list" class="ingredient-list"></ul>
         </div>
     </div>
+
+    <div class="save-load-area">
+        <h2 style="font-size:1rem; margin:0 0 10px 0; color:#555;">📁 セットの保存・読込</h2>
+        <div class="save-input-group">
+            <input type="text" id="set-name-input" class="set-name-input" placeholder="セット名 (例: カレー週)">
+            <button class="save-btn" onclick="saveCurrentSet()">保存</button>
+        </div>
+        <ul id="saved-sets-list" class="saved-sets-list">
+            </ul>
+    </div>
+
 </div>
 
 <div class="dashboard">
@@ -333,6 +377,7 @@
 
     // === アプリの状態 ===
     let state = {};
+    let savedSets = {};
     let activeCategories = new Set(['カレー', 'サラダ', 'デザート']);
 
     // === 初期化 ===
@@ -344,10 +389,85 @@
             RECIPES.forEach(r => state[r.id] = 0);
         }
         
+        initSavedSets();
         adjustThresholdBasedOnState();
         updateFilterButtons();
         applyFilters();
         updateCalculation();
+    }
+
+    // === 保存セット関連 ===
+    function initSavedSets() {
+        const saved = localStorage.getItem('pokeSleepSavedSets');
+        if(saved) {
+            savedSets = JSON.parse(saved);
+        }
+        renderSavedSets();
+    }
+
+    function saveCurrentSet() {
+        const input = document.getElementById('set-name-input');
+        const name = input.value.trim();
+        
+        if(!name) {
+            alert("セット名を入力してください");
+            return;
+        }
+        
+        // Save current state
+        savedSets[name] = JSON.parse(JSON.stringify(state));
+        localStorage.setItem('pokeSleepSavedSets', JSON.stringify(savedSets));
+        
+        input.value = '';
+        renderSavedSets();
+    }
+
+    function loadSet(name) {
+        if(confirm(`セット「${name}」を読み込みますか？\n現在の選択内容は上書きされます。`)) {
+            const set = savedSets[name];
+            if(set) {
+                // Ensure state has all current recipes (in case recipes updated)
+                RECIPES.forEach(r => {
+                    if (set[r.id] === undefined) set[r.id] = 0;
+                });
+                state = JSON.parse(JSON.stringify(set));
+                
+                // Adjust UI
+                adjustThresholdBasedOnState();
+                saveAndUpdate();
+            }
+        }
+    }
+
+    function deleteSet(name) {
+        if(confirm(`セット「${name}」を削除しますか？`)) {
+            delete savedSets[name];
+            localStorage.setItem('pokeSleepSavedSets', JSON.stringify(savedSets));
+            renderSavedSets();
+        }
+    }
+
+    function renderSavedSets() {
+        const list = document.getElementById('saved-sets-list');
+        list.innerHTML = '';
+        
+        Object.keys(savedSets).forEach(name => {
+            const li = document.createElement('li');
+            li.className = 'saved-set-item';
+            
+            li.innerHTML = `
+                <span class="set-name">📁 ${name}</span>
+                <div class="set-actions">
+                    <button class="load-btn" onclick="loadSet('${name}')">読込</button>
+                    <button class="delete-btn" onclick="deleteSet('${name}')">🗑️</button>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+        
+        if(Object.keys(savedSets).length === 0) {
+            list.innerHTML = '<li style="color:#999; padding:10px; text-align:center; font-size:0.8rem;">保存されたセットはありません</li>';
+        }
     }
 
     // 自動調整ロジック
@@ -376,16 +496,14 @@
         }
     }
 
-    // === フィルター切替 (複数選択対応) ===
+    // === フィルター切替 ===
     function setCategory(type) {
         const types = ['カレー', 'サラダ', 'デザート'];
         if (type === 'all') {
             const isAllSelected = types.every(t => activeCategories.has(t));
             if (isAllSelected) {
-                // OFF: 全解除
                 activeCategories.clear();
             } else {
-                // ON: 全選択
                 activeCategories = new Set(types);
             }
         } else {
@@ -402,7 +520,6 @@
     function updateFilterButtons() {
         const types = ['カレー', 'サラダ', 'デザート'];
         
-        // Update category buttons
         types.forEach(type => {
             const btn = document.getElementById(`btn-${type}`);
             if (activeCategories.has(type)) {
@@ -412,7 +529,6 @@
             }
         });
 
-        // Update All button
         const btnAll = document.getElementById('btn-all');
         const isAllActive = types.every(t => activeCategories.has(t));
         if (isAllActive) {
@@ -422,7 +538,6 @@
         }
     }
 
-    // ★隠れた選択済み料理をチェックして表示更新
     function updateHiddenAlert(filteredRecipes, threshold) {
         let hiddenCount = 0;
 
@@ -430,12 +545,8 @@
             if (state[id] > 0) {
                 const recipe = RECIPES.find(r => r.id === id);
                 if (recipe) {
-                    // 「現在のフィルタ条件で表示されているか」を判定
                     const isVisible = activeCategories.has(recipe.type) && (recipe.energy > threshold);
-                    
-                    if (!isVisible) {
-                        hiddenCount++;
-                    }
+                    if (!isVisible) hiddenCount++;
                 }
             }
         });
@@ -462,7 +573,6 @@
             return typeMatch && energyMatch;
         });
 
-        // 隠れた料理の警告を更新
         updateHiddenAlert(filtered, threshold);
 
         filtered.forEach(recipe => {
@@ -474,7 +584,6 @@
                 increment(recipe.id);
             };
 
-            // 画像のパス： images/料理名.png
             const imgPath = `images/${recipe.name}.png`;
 
             div.innerHTML = `
@@ -490,7 +599,6 @@
         });
     }
 
-    // === カウント操作 ===
     function increment(id) {
         state[id] = (state[id] || 0) + 1;
         saveAndUpdate();
@@ -501,9 +609,7 @@
         saveAndUpdate();
     }
 
-    // ★修正: 確認なしでリセット
     function resetAll() {
-        // if(!confirm("選択内容をすべてクリアしますか？")) return;
         Object.keys(state).forEach(k => state[k] = 0);
         saveAndUpdate();
     }
@@ -514,7 +620,6 @@
         updateCalculation();
     }
 
-    // === 計算ロジック (同一カテゴリは足し算、異カテゴリは最大値) ===
     function updateCalculation() {
         const categoryTotals = {
             'カレー': {},
@@ -522,7 +627,7 @@
             'デザート': {}
         };
         
-        let totalMeals = 0; // 総料理数は単純合計でOK
+        let totalMeals = 0;
 
         Object.keys(state).forEach(id => {
             const count = state[id];
@@ -540,10 +645,7 @@
             }
         });
 
-        // 2. カテゴリ間で比較し、最大値を採用する
         const finalIngredients = {};
-        
-        // 集計された全ての食材キーを取得
         const usedIngredients = new Set();
         Object.values(categoryTotals).forEach(totals => {
             Object.keys(totals).forEach(ing => usedIngredients.add(ing));
@@ -560,7 +662,6 @@
             }
         });
 
-        // 合計個数の計算
         let totalItems = 0;
         Object.values(finalIngredients).forEach(count => totalItems += count);
         
@@ -572,7 +673,6 @@
         const neededList = document.getElementById('needed-list');
         neededList.innerHTML = '';
         
-        // 表示順序を ALL_INGREDIENTS に従わせる
         const neededKeys = ALL_INGREDIENTS.filter(ing => finalIngredients[ing] > 0);
         
         if (neededKeys.length === 0) {
