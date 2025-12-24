@@ -13,6 +13,7 @@
             --accent: #FF6B6B;
             --green: #4CAF50;
             --energy-color: #F5A623;
+            --alert-color: #e74c3c;
         }
         body {
             font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -55,6 +56,18 @@
             padding: 5px; border: 1px solid #ccc; border-radius: 6px; width: 80px; text-align: center; font-size: 0.9rem;
         }
 
+        /* Hidden Alert */
+        #hidden-alert {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #999;
+            transition: color 0.3s;
+        }
+        #hidden-alert.alert-active {
+            color: var(--alert-color);
+            font-weight: bold;
+        }
+
         /* Recipe Grid */
         .recipe-grid {
             display: grid;
@@ -78,6 +91,7 @@
         }
         .recipe-card.selected { border-color: var(--primary); background-color: #f0f8ff; }
         
+        /* 料理画像 */
         .recipe-img {
             width: 50px;
             height: 50px;
@@ -170,6 +184,8 @@
             <input type="number" id="energy-threshold" class="energy-input" value="10000" step="1000" oninput="applyFilters()">
             <span>以下を非表示</span>
         </div>
+
+        <div id="hidden-alert">選択済みの非表示料理：0</div>
     </div>
 
     <div id="recipe-list" class="recipe-grid">
@@ -199,25 +215,11 @@
 <script>
     // === アイコン定義 ===
     const ING_ICONS = {
-        "とくせんリンゴ": "🍎",
-        "モーモーミルク": "🥛",
-        "ワカクサ大豆": "🟢",
-        "あまいミツ": "🍯",
-        "マメミート": "🥓",
-        "あったかジンジャー": "🔥",
-        "あんみんトマト": "🍅",
-        "とくせんエッグ": "🥚",
-        "ピュアなオイル": "🧴",
-        "ほっこりポテト": "🥔",
-        "げきからハーブ": "🌿",
-        "リラックスカカオ": "🍫",
-        "あじわいキノコ": "🍄",
-        "ふといながねぎ": "🎋",
-        "ずっしりカボチャ": "🎃",
-        "ワカクサコーン": "🌽",
-        "つやつやアボカド": "🥑",
-        "めざましコーヒー": "☕",
-        "おいしいシッポ": "🍖"
+        "とくせんリンゴ": "🍎", "モーモーミルク": "🥛", "ワカクサ大豆": "🟢", "あまいミツ": "🍯",
+        "マメミート": "🥓", "あったかジンジャー": "🔥", "あんみんトマト": "🍅", "とくせんエッグ": "🥚",
+        "ピュアなオイル": "🧴", "ほっこりポテト": "🥔", "げきからハーブ": "🌿", "リラックスカカオ": "🍫",
+        "あじわいキノコ": "🍄", "ふといながねぎ": "🎋", "ずっしりカボチャ": "🎃", "ワカクサコーン": "🌽",
+        "つやつやアボカド": "🥑", "めざましコーヒー": "☕", "おいしいシッポ": "🍖"
     };
 
     // === データ定義 ===
@@ -313,20 +315,17 @@
             RECIPES.forEach(r => state[r.id] = 0);
         }
         
-        // ★自動調整ロジックを追加
         adjustThresholdBasedOnState();
-
         updateFilterButtons();
         applyFilters();
         updateCalculation();
     }
 
-    // ★選択中の料理に合わせて基準エナジーを自動調整する関数
+    // 自動調整ロジック
     function adjustThresholdBasedOnState() {
         let minSelectedEnergy = Infinity;
         let hasSelection = false;
 
-        // 選択されている料理の中で、最も低いエナジーを探す
         Object.keys(state).forEach(id => {
             if (state[id] > 0) {
                 const recipe = RECIPES.find(r => r.id === id);
@@ -339,20 +338,16 @@
             }
         });
 
-        // 現在の設定値を取得
         const input = document.getElementById('energy-threshold');
         const currentThreshold = parseInt(input.value) || 10000;
 
-        // もし選択中の料理が現在の設定で見えなくなるなら、設定値を下げる
         if (hasSelection && minSelectedEnergy <= currentThreshold) {
-            // 例: 5547なら5000にする (1000単位で切り捨て)
             const newThreshold = Math.floor((minSelectedEnergy - 1) / 1000) * 1000;
-            // 負の値にならないように0で止める
             input.value = Math.max(0, newThreshold);
         }
     }
 
-    // === フィルター切替 (複数選択対応) ===
+    // === フィルター切替 ===
     function setCategory(type) {
         if (type === 'all') {
             activeCategories = new Set(['カレー', 'サラダ', 'デザート']);
@@ -378,6 +373,34 @@
         });
     }
 
+    // ★隠れた選択済み料理をチェックして表示更新
+    function updateHiddenAlert(filteredRecipes, threshold) {
+        let hiddenCount = 0;
+
+        Object.keys(state).forEach(id => {
+            if (state[id] > 0) {
+                const recipe = RECIPES.find(r => r.id === id);
+                if (recipe) {
+                    // 「現在のフィルタ条件で表示されているか」を判定
+                    const isVisible = activeCategories.has(recipe.type) && (recipe.energy > threshold);
+                    
+                    if (!isVisible) {
+                        hiddenCount++;
+                    }
+                }
+            }
+        });
+
+        const alertEl = document.getElementById('hidden-alert');
+        if (hiddenCount > 0) {
+            alertEl.classList.add('alert-active');
+            alertEl.textContent = `⚠️ 選択済みの非表示料理：${hiddenCount}`;
+        } else {
+            alertEl.classList.remove('alert-active');
+            alertEl.textContent = `選択済みの非表示料理：0`;
+        }
+    }
+
     function applyFilters() {
         const threshold = parseInt(document.getElementById('energy-threshold').value) || 0;
         
@@ -390,6 +413,9 @@
             return typeMatch && energyMatch;
         });
 
+        // 隠れた料理の警告を更新
+        updateHiddenAlert(filtered, threshold);
+
         filtered.forEach(recipe => {
             const count = state[recipe.id] || 0;
             const div = document.createElement('div');
@@ -399,7 +425,6 @@
                 increment(recipe.id);
             };
 
-            // 画像のパス： images/料理名.png
             const imgPath = `images/${recipe.name}.png`;
 
             div.innerHTML = `
