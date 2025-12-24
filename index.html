@@ -24,7 +24,25 @@
             padding: 10px;
             padding-bottom: 160px; /* フッター + 保存エリア分の余白 */
         }
-        h1 { font-size: 1.2rem; text-align: center; color: var(--primary); margin-bottom: 15px; }
+        
+        /* タイトルとアイコンの調整 */
+        h1 { 
+            font-size: 1.2rem; 
+            text-align: center; 
+            color: var(--primary); 
+            margin-bottom: 15px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px; /* アイコンと文字の間隔 */
+        }
+        
+        /* タイトル用アイコン画像のスタイル */
+        .title-icon {
+            height: 1.8em; /* 文字より少し大きく */
+            width: auto;
+            object-fit: contain;
+        }
         
         .container { max-width: 900px; margin: 0 auto; }
         
@@ -271,7 +289,7 @@
 <body>
 
 <div class="container">
-    <h1>🥘 PokemonSleepCooking</h1>
+    <h1><img src="images/icon.png" alt="" class="title-icon"> PokemonSleepCooking</h1>
 
     <div class="controls-area">
         <button class="set-manager-btn" onclick="openModal()">📁 料理セットの保存・呼出</button>
@@ -879,8 +897,7 @@ const RECIPES = [
         }
     },
     {
-        "id": "サラダ_46",
-        "name": "マメハムサラダ",
+        "id": "サラダ_46", "name": "マメハムサラダ",
         "type": "サラダ",
         "energy": 978,
         "ingredients": {
@@ -1035,7 +1052,8 @@ const RECIPES = [
         }
     },
     {
-        "id": "デザート_60", "name": "ふくつのジンジャークッキー",
+        "id": "デザート_60",
+        "name": "ふくつのジンジャークッキー",
         "type": "デザート",
         "energy": 4921,
         "ingredients": {
@@ -1159,14 +1177,17 @@ const RECIPES = [
         }
     },
     {
-        "id": "デザート_72", "name": "とくせんリンゴジュース",
-        "type": "デザート", "energy": 855,
+        "id": "デザート_72",
+        "name": "とくせんリンゴジュース",
+        "type": "デザート",
+        "energy": 855,
         "ingredients": {
             "とくせんリンゴ": 8
         }
     },
     {
-        "id": "デザート_73", "name": "モーモーホットミルク",
+        "id": "デザート_73",
+        "name": "モーモーホットミルク",
         "type": "デザート",
         "energy": 814,
         "ingredients": {
