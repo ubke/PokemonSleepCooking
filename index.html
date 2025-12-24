@@ -43,21 +43,12 @@
         .filter-btn {
             padding: 6px 12px; border: 1px solid #ddd; border-radius: 15px; background: #fff; cursor: pointer; font-weight: bold; font-size: 0.8rem; transition: all 0.2s; color: #666;
         }
-        
-        /* カテゴリボタンの選択状態 */
         .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        
-        /* 全選択ボタンのスタイル（OFF時） */
         .filter-btn.all-btn { 
-            border-color: #666; 
-            color: #666;
-            background: #fff;
+            border-color: #666; color: #666; background: #fff;
         }
-        /* 全選択ボタンのスタイル（ON時） */
         .filter-btn.all-btn.active { 
-            background: var(--all-btn-active); 
-            color: white; 
-            border-color: var(--all-btn-active);
+            background: var(--all-btn-active); color: white; border-color: var(--all-btn-active);
         }
 
         /* Energy Input */
@@ -207,7 +198,9 @@
 
     <div class="result-section">
         <div>
-            <h2 style="font-size:1rem; border-left:4px solid var(--primary); padding-left:8px; margin:0 0 10px 0;">📦 必要な食材</h2>
+            <h2 style="font-size:1rem; border-left:4px solid var(--primary); padding-left:8px; margin:0 0 10px 0;">
+                📦 必要な食材 <span id="needed-count-display" style="font-size:0.9rem; font-weight:normal; margin-left:5px; color:#555;">(計: 0個)</span>
+            </h2>
             <ul id="needed-list" class="ingredient-list"></ul>
         </div>
         <div>
@@ -459,6 +452,7 @@
                 increment(recipe.id);
             };
 
+            // 画像のパス： images/料理名.png
             const imgPath = `images/${recipe.name}.png`;
 
             div.innerHTML = `
@@ -514,6 +508,16 @@
                 }
             }
         });
+
+        // 合計個数の計算
+        let totalItems = 0;
+        Object.values(totalIngredients).forEach(count => totalItems += count);
+        
+        // ヘッダーの個数表示を更新
+        const countDisplay = document.getElementById('needed-count-display');
+        if (countDisplay) {
+            countDisplay.textContent = `(計: ${totalItems}個)`;
+        }
 
         const neededList = document.getElementById('needed-list');
         neededList.innerHTML = '';
