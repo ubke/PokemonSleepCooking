@@ -41,9 +41,7 @@
         .filter-btn {
             padding: 6px 12px; border: 1px solid #ddd; border-radius: 15px; background: #fff; cursor: pointer; font-weight: bold; font-size: 0.8rem; transition: all 0.2s; color: #666;
         }
-        /* 選択されている状態のスタイル */
         .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        /* 全選択ボタンのスタイル */
         .filter-btn.all-btn { background: #666; color: white; border-color: #666; }
 
         /* Energy Input */
@@ -304,7 +302,6 @@
 
     // === アプリの状態 ===
     let state = {};
-    // 初期状態は全選択
     let activeCategories = new Set(['カレー', 'サラダ', 'デザート']);
 
     // === 初期化 ===
@@ -315,9 +312,44 @@
         } else {
             RECIPES.forEach(r => state[r.id] = 0);
         }
+        
+        // ★自動調整ロジックを追加
+        adjustThresholdBasedOnState();
+
         updateFilterButtons();
         applyFilters();
         updateCalculation();
+    }
+
+    // ★選択中の料理に合わせて基準エナジーを自動調整する関数
+    function adjustThresholdBasedOnState() {
+        let minSelectedEnergy = Infinity;
+        let hasSelection = false;
+
+        // 選択されている料理の中で、最も低いエナジーを探す
+        Object.keys(state).forEach(id => {
+            if (state[id] > 0) {
+                const recipe = RECIPES.find(r => r.id === id);
+                if (recipe) {
+                    hasSelection = true;
+                    if (recipe.energy < minSelectedEnergy) {
+                        minSelectedEnergy = recipe.energy;
+                    }
+                }
+            }
+        });
+
+        // 現在の設定値を取得
+        const input = document.getElementById('energy-threshold');
+        const currentThreshold = parseInt(input.value) || 10000;
+
+        // もし選択中の料理が現在の設定で見えなくなるなら、設定値を下げる
+        if (hasSelection && minSelectedEnergy <= currentThreshold) {
+            // 例: 5547なら5000にする (1000単位で切り捨て)
+            const newThreshold = Math.floor((minSelectedEnergy - 1) / 1000) * 1000;
+            // 負の値にならないように0で止める
+            input.value = Math.max(0, newThreshold);
+        }
     }
 
     // === フィルター切替 (複数選択対応) ===
@@ -336,7 +368,6 @@
     }
 
     function updateFilterButtons() {
-        // 各ボタンのクラスを更新
         ['カレー', 'サラダ', 'デザート'].forEach(type => {
             const btn = document.getElementById(`btn-${type}`);
             if (activeCategories.has(type)) {
@@ -354,7 +385,6 @@
         container.innerHTML = '';
 
         const filtered = RECIPES.filter(r => {
-            // カテゴリが含まれているかチェック
             const typeMatch = activeCategories.has(r.type);
             const energyMatch = r.energy > threshold; 
             return typeMatch && energyMatch;
