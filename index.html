@@ -493,27 +493,57 @@
 
     // === 計算ロジック ===
     function updateCalculation() {
-        const totalIngredients = {};
-        let totalMeals = 0;
+        // 1. カテゴリごとの必要食材数を集計
+        // (同じカテゴリの料理は同時に作る可能性があるため足し算)
+        const categoryTotals = {
+            'カレー': {},
+            'サラダ': {},
+            'デザート': {}
+        };
         
+        let totalMeals = 0; // 総料理数は単純合計でOK
+
         Object.keys(state).forEach(id => {
             const count = state[id];
             if (count > 0) {
                 totalMeals += count;
                 const recipe = RECIPES.find(r => r.id === id);
                 if (recipe) {
-                    Object.entries(recipe.ingredients).forEach(([ing, num]) => {
-                        totalIngredients[ing] = (totalIngredients[ing] || 0) + (num * count);
-                    });
+                    const type = recipe.type; 
+                    if (categoryTotals[type]) {
+                        Object.entries(recipe.ingredients).forEach(([ing, num]) => {
+                            categoryTotals[type][ing] = (categoryTotals[type][ing] || 0) + (num * count);
+                        });
+                    }
                 }
+            }
+        });
+
+        // 2. カテゴリ間で比較し、最大値を採用する
+        // (週ごとにカテゴリが変わるため、最大値があればどちらの週でも対応できる)
+        const finalIngredients = {};
+        
+        // 集計された全ての食材キーを取得
+        const usedIngredients = new Set();
+        Object.values(categoryTotals).forEach(totals => {
+            Object.keys(totals).forEach(ing => usedIngredients.add(ing));
+        });
+
+        usedIngredients.forEach(ing => {
+            const maxCount = Math.max(
+                categoryTotals['カレー'][ing] || 0,
+                categoryTotals['サラダ'][ing] || 0,
+                categoryTotals['デザート'][ing] || 0
+            );
+            if (maxCount > 0) {
+                finalIngredients[ing] = maxCount;
             }
         });
 
         // 合計個数の計算
         let totalItems = 0;
-        Object.values(totalIngredients).forEach(count => totalItems += count);
+        Object.values(finalIngredients).forEach(count => totalItems += count);
         
-        // ヘッダーの個数表示を更新
         const countDisplay = document.getElementById('needed-count-display');
         if (countDisplay) {
             countDisplay.textContent = `(計: ${totalItems}個)`;
@@ -521,7 +551,7 @@
 
         const neededList = document.getElementById('needed-list');
         neededList.innerHTML = '';
-        const neededKeys = Object.keys(totalIngredients).sort();
+        const neededKeys = Object.keys(finalIngredients).sort();
         
         if (neededKeys.length === 0) {
             neededList.innerHTML = '<li style="color:#999; text-align:center; padding:10px;">料理を選択してください</li>';
@@ -533,7 +563,7 @@
                 
                 li.innerHTML = `
                     <span class="ing-name">${icon} ${ing}</span>
-                    <span class="ing-count">${totalIngredients[ing]}個</span>
+                    <span class="ing-count">${finalIngredients[ing]}個</span>
                 `;
                 neededList.appendChild(li);
             });
@@ -541,7 +571,7 @@
 
         const surplusList = document.getElementById('surplus-list');
         surplusList.innerHTML = '';
-        const surplus = ALL_INGREDIENTS.filter(ing => !totalIngredients[ing]);
+        const surplus = ALL_INGREDIENTS.filter(ing => !finalIngredients[ing]);
         
         surplus.forEach(ing => {
             const li = document.createElement('li');
