@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ポケスリ備蓄＆余剰チェッカー</title>
+    <title>PokemonSleepCooking</title>
     <style>
         :root {
             --primary: #4A90E2;
@@ -155,7 +155,7 @@
 <body>
 
 <div class="container">
-    <h1>🥘 ポケスリ備蓄プランナー</h1>
+    <h1>🥘 PokemonSleepCooking</h1>
 
     <div class="controls-area">
         <div class="filters">
@@ -167,7 +167,7 @@
         
         <div class="energy-filter">
             <label for="energy-threshold">⚡ 基準エナジー:</label>
-            <input type="number" id="energy-threshold" class="energy-input" placeholder="0" step="1000" oninput="applyFilters()">
+            <input type="number" id="energy-threshold" class="energy-input" value="10000" step="1000" oninput="applyFilters()">
             <span>以下を非表示</span>
         </div>
     </div>
