@@ -247,19 +247,15 @@
             padding: 10px 0; border-bottom: 1px solid #eee;
         }
         .saved-set-item:last-child { border-bottom: none; }
-        
-        /* Clickable set name styles */
         .set-name { 
             font-weight: bold; font-size: 0.95rem; cursor: pointer; 
-            flex: 1; /* 名前エリアを広く取る */
+            flex: 1; 
             padding: 5px 0;
         }
         .set-name:hover {
             color: var(--primary); text-decoration: underline;
         }
-
         .set-actions { display: flex; gap: 6px; }
-        
         .load-btn {
             background: #4CAF50; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold;
         }
@@ -278,7 +274,7 @@
     <h1>🥘 PokemonSleepCooking</h1>
 
     <div class="controls-area">
-        <button class="set-manager-btn" onclick="openModal()">📁 料理セットの管理</button>
+        <button class="set-manager-btn" onclick="openModal()">📁 料理セットの保存・呼出</button>
 
         <div class="filters">
             <button class="filter-btn all-btn active" id="btn-all" onclick="setCategory('all')">全選択</button>
@@ -316,7 +312,7 @@
 <div id="setModal" class="modal">
     <div class="modal-content">
         <span class="close-modal" onclick="closeModal()">&times;</span>
-        <h2 style="font-size:1.1rem; margin:0 0 15px 0; color:#555; border-bottom:2px solid #eee; padding-bottom:10px;">📁 セット管理</h2>
+        <h2 style="font-size:1.1rem; margin:0 0 15px 0; color:#555; border-bottom:2px solid #eee; padding-bottom:10px;">📁 料理セットの管理</h2>
         
         <div class="save-input-group">
             <input type="text" id="set-name-input" class="set-name-input" placeholder="セット名 (例: カレー週)">
@@ -883,7 +879,8 @@ const RECIPES = [
         }
     },
     {
-        "id": "サラダ_46", "name": "マメハムサラダ",
+        "id": "サラダ_46",
+        "name": "マメハムサラダ",
         "type": "サラダ",
         "energy": 978,
         "ingredients": {
@@ -1038,8 +1035,7 @@ const RECIPES = [
         }
     },
     {
-        "id": "デザート_60",
-        "name": "ふくつのジンジャークッキー",
+        "id": "デザート_60", "name": "ふくつのジンジャークッキー",
         "type": "デザート",
         "energy": 4921,
         "ingredients": {
@@ -1104,7 +1100,8 @@ const RECIPES = [
         }
     },
     {
-        "id": "デザート_66", "name": "かるわざソイケーキ",
+        "id": "デザート_66",
+        "name": "かるわざソイケーキ",
         "type": "デザート",
         "energy": 1924,
         "ingredients": {
@@ -1113,7 +1110,8 @@ const RECIPES = [
         }
     },
     {
-        "id": "デザート_67", "name": "マイペースやさいジュース",
+        "id": "デザート_67",
+        "name": "マイペースやさいジュース",
         "type": "デザート",
         "energy": 1924,
         "ingredients": {
@@ -1122,7 +1120,8 @@ const RECIPES = [
         }
     },
     {
-        "id": "デザート_68", "name": "ひのこのジンジャーティー",
+        "id": "デザート_68",
+        "name": "ひのこのジンジャーティー",
         "type": "デザート",
         "energy": 1913,
         "ingredients": {
@@ -1131,7 +1130,8 @@ const RECIPES = [
         }
     },
     {
-        "id": "デザート_69", "name": "じゅくせいスイートポテト",
+        "id": "デザート_69",
+        "name": "じゅくせいスイートポテト",
         "type": "デザート",
         "energy": 1907,
         "ingredients": {
@@ -1140,28 +1140,36 @@ const RECIPES = [
         }
     },
     {
-        "id": "デザート_70", "name": "ねがいごとアップルパイ",
-        "type": "デザート", "energy": 1748, "ingredients": {
+        "id": "デザート_70",
+        "name": "ねがいごとアップルパイ",
+        "type": "デザート",
+        "energy": 1748,
+        "ingredients": {
             "モーモーミルク": 4,
             "とくせんリンゴ": 12
         }
     },
     {
-        "id": "デザート_71", "name": "クラフトサイコソーダ",
-        "type": "デザート", "energy": 1079, "ingredients": {
+        "id": "デザート_71",
+        "name": "クラフトサイコソーダ",
+        "type": "デザート",
+        "energy": 1079,
+        "ingredients": {
             "あまいミツ": 9
         }
     },
     {
         "id": "デザート_72", "name": "とくせんリンゴジュース",
-        "type": "デザート", "energy": 855, "ingredients": {
+        "type": "デザート", "energy": 855,
+        "ingredients": {
             "とくせんリンゴ": 8
         }
     },
     {
         "id": "デザート_73", "name": "モーモーホットミルク",
         "type": "デザート",
-        "energy": 814, "ingredients": {
+        "energy": 814,
+        "ingredients": {
             "モーモーミルク": 7
         }
     }
