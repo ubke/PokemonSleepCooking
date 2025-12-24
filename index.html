@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポケスリ備蓄＆余剰チェッカー</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --bg: #F0F4F8;
+            --card-bg: #FFFFFF;
+            --text: #333;
+            --accent: #FF6B6B;
+            --green: #4CAF50;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 100px; /* Footer space */
+        }
+        h1 { font-size: 1.5rem; text-align: center; color: var(--primary); margin-bottom: 20px; }
+        h2 { font-size: 1.2rem; border-left: 5px solid var(--primary); padding-left: 10px; margin-top: 30px;}
+        
+        /* Layout */
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        /* Filter Buttons */
+        .filters { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        .filter-btn {
+            padding: 8px 16px; border: none; border-radius: 20px; background: #ddd; cursor: pointer; font-weight: bold;
+        }
+        .filter-btn.active { background: var(--primary); color: white; }
+
+        /* Recipe Grid */
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+        }
+        .recipe-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.1s;
+            user-select: none;
+            border: 2px solid transparent;
+            position: relative;
+        }
+        .recipe-card:active { transform: scale(0.98); }
+        .recipe-card.selected { border-color: var(--primary); background-color: #eef6ff; }
+        
+        .recipe-name { font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; height: 2.4em; display: flex; align-items: center; justify-content: center;}
+        .count-badge {
+            background: var(--primary); color: white;
+            border-radius: 50%; width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; margin: 0 auto;
+        }
+        .hidden { display: none; }
+
+        /* Controls inside card */
+        .card-controls { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        .sub-btn { background: #ccc; border: none; width: 24px; height: 24px; border-radius: 50%; font-weight: bold; cursor: pointer; }
+
+        /* Dashboard (Sticky Bottom) */
+        .dashboard {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-top: 1px solid #ddd;
+            padding: 15px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+        }
+        .dash-content { max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;}
+        .reset-btn { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+        
+        /* Result Lists */
+        .result-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;}
+        @media (max-width: 600px) { .result-section { grid-template-columns: 1fr; } }
+        
+        .ingredient-list { list-style: none; padding: 0; }
+        .ingredient-item {
+            display: flex; justify-content: space-between;
+            background: white; padding: 8px 12px; margin-bottom: 5px; border-radius: 6px;
+        }
+        .surplus-tag { background: #e0f2f1; color: #00695c; }
+        .needed-tag { background: #ffebee; color: #c62828; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🥘 ポケスリ備蓄プランナー</h1>
+
+    <div class="filters">
+        <button class="filter-btn active" onclick="filterRecipes('all')">すべて</button>
+        <button class="filter-btn" onclick="filterRecipes('カレー')">カレー</button>
+        <button class="filter-btn" onclick="filterRecipes('サラダ')">サラダ</button>
+        <button class="filter-btn" onclick="filterRecipes('デザート')">デザート</button>
+    </div>
+
+    <div id="recipe-list" class="recipe-grid">
+        </div>
+
+    <div class="result-section">
+        <div>
+            <h2>📦 必要な食材 (合計)</h2>
+            <ul id="needed-list" class="ingredient-list"></ul>
+        </div>
+        <div>
+            <h2>✨ 余剰食材 (不使用)</h2>
+            <p style="font-size:0.8rem; color:#666;">これらは今回の料理に使われません。<br>鍋の隙間に入れてOK！</p>
+            <ul id="surplus-list" class="ingredient-list"></ul>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard">
+    <div class="dash-content">
+        <div>
+            <span style="font-weight:bold;">選択料理数: <span id="total-meals">0</span>食</span>
+        </div>
+        <button class="reset-btn" onclick="resetAll()">オールクリア 🗑️</button>
+    </div>
+</div>
+
+<script>
+    // === データ定義 (主要なレシピのみ抜粋しています。必要に応じて追加してください) ===
+    const ALL_INGREDIENTS = [
+        "特選リンゴ", "あまいミツ", "マメミート", "あんみんトマト", "ほっこりポテト", 
+        "リラックスカカオ", "おいしいシッポ", "モーモーミルク", "とくせんエッグ", 
+        "ワカクサコーン", "激辛ハーブ", "ピュアなオイル", "あったかジンジャー", 
+        "じわっとキノコ", "ふといナガネギ", "めざましコーヒー"
+    ];
+
+    const RECIPES = [
+        // カレー
+        { id: "c1", name: "ぜったいねむりバターカレー", type: "カレー", ingredients: { "ほっこりポテト": 18, "じわっとキノコ": 12, "リラックスカカオ": 15, "モーモーミルク": 10 } },
+        { id: "c2", name: "煉獄コーンキーマカレー", type: "カレー", ingredients: { "激辛ハーブ": 27, "マメミート": 24, "ワカクサコーン": 14, "あったかジンジャー": 12 } },
+        { id: "c3", name: "ニンジャカレー", type: "カレー", ingredients: { "ワカクサ大豆": 15, "マメミート": 9, "ふといナガネギ": 9, "じわっとキノコ": 5 } }, // 注: 大豆を追加する場合はALL_INGREDIENTSにも必要
+        { id: "c4", name: "マイルドハニーカレー", type: "カレー", ingredients: { "あまいミツ": 7 } },
+        // サラダ
+        { id: "s1", name: "ニンジャサラダ", type: "サラダ", ingredients: { "ふといナガネギ": 15, "ワカクサ大豆": 15, "じわっとキノコ": 12, "あったかジンジャー": 11 } },
+        { id: "s2", name: "ワカクササラダ", type: "サラダ", ingredients: { "ピュアなオイル": 22, "ワカクサコーン": 17, "あんみんトマト": 14, "ほっこりポテト": 9 } },
+        { id: "s3", name: "めいそうスイートサラダ", type: "サラダ", ingredients: { "あまいミツ": 21, "特選リンゴ": 15, "ワカクサコーン": 12 } },
+        // デザート
+        { id: "d1", name: "おちゃかいコーンスコーン", type: "デザート", ingredients: { "特選リンゴ": 20, "あったかジンジャー": 20, "ワカクサコーン": 18, "モーモーミルク": 9 } },
+        { id: "d2", name: "プリンのプリンアラモード", type: "デザート", ingredients: { "あまいミツ": 20, "とくせんエッグ": 15, "モーモーミルク": 10, "特選リンゴ": 10 } },
+        { id: "d3", name: "フラワーギフトマカロン", type: "デザート", ingredients: { "リラックスカカオ": 25, "とくせんエッグ": 25, "あまいミツ": 17, "モーモーミルク": 10 } }
+    ];
+
+    // 注: "ワカクサ大豆" がALL_INGREDIENTSから抜けていたので補完
+    if(!ALL_INGREDIENTS.includes("ワカクサ大豆")) ALL_INGREDIENTS.push("ワカクサ大豆");
+    ALL_INGREDIENTS.sort();
+
+    // === アプリの状態 ===
+    let state = {}; // { recipeId: count }
+
+    // === 初期化 ===
+    function init() {
+        const saved = localStorage.getItem('pokeSleepPlanner');
+        if (saved) {
+            state = JSON.parse(saved);
+        } else {
+            // 初期状態
+            RECIPES.forEach(r => state[r.id] = 0);
+        }
+        renderRecipes();
+        updateCalculation();
+    }
+
+    // === レシピ描画 ===
+    function renderRecipes() {
+        const container = document.getElementById('recipe-list');
+        container.innerHTML = '';
+
+        RECIPES.forEach(recipe => {
+            const count = state[recipe.id] || 0;
+            const div = document.createElement('div');
+            div.className = `recipe-card ${count > 0 ? 'selected' : ''}`;
+            div.dataset.type = recipe.type;
+            div.onclick = (e) => {
+                if(e.target.tagName === 'BUTTON') return; // ボタン押下時は親のクリックを無視
+                increment(recipe.id);
+            };
+
+            div.innerHTML = `
+                <div class="recipe-name">${recipe.name}</div>
+                <div class="count-badge">${count}</div>
+                <div class="card-controls ${count > 0 ? '' : 'hidden'}">
+                    <button class="sub-btn" onclick="decrement('${recipe.id}')">-</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // === フィルター機能 ===
+    function filterRecipes(type) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+
+        const cards = document.querySelectorAll('.recipe-card');
+        cards.forEach(card => {
+            if (type === 'all' || card.dataset.type === type) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    // === カウント操作 ===
+    function increment(id) {
+        state[id] = (state[id] || 0) + 1;
+        saveAndRender();
+    }
+
+    function decrement(id) {
+        if (state[id] > 0) state[id]--;
+        saveAndRender();
+    }
+
+    function resetAll() {
+        if(!confirm("選択内容をすべてクリアしますか？")) return;
+        Object.keys(state).forEach(k => state[k] = 0);
+        saveAndRender();
+    }
+
+    function saveAndRender() {
+        localStorage.setItem('pokeSleepPlanner', JSON.stringify(state));
+        renderRecipes();
+        updateCalculation();
+    }
+
+    // === 計算ロジック ===
+    function updateCalculation() {
+        const totalIngredients = {};
+        let totalMeals = 0;
+        
+        // 1. 必要な食材を集計
+        Object.keys(state).forEach(id => {
+            const count = state[id];
+            if (count > 0) {
+                totalMeals += count;
+                const recipe = RECIPES.find(r => r.id === id);
+                Object.entries(recipe.ingredients).forEach(([ing, num]) => {
+                    totalIngredients[ing] = (totalIngredients[ing] || 0) + (num * count);
+                });
+            }
+        });
+
+        // 2. 表示更新：必要食材
+        const neededList = document.getElementById('needed-list');
+        neededList.innerHTML = '';
+        const neededKeys = Object.keys(totalIngredients).sort();
+        
+        if (neededKeys.length === 0) {
+            neededList.innerHTML = '<li style="color:#999; text-align:center;">料理を選択してください</li>';
+        } else {
+            neededKeys.forEach(ing => {
+                const li = document.createElement('li');
+                li.className = 'ingredient-item needed-tag';
+                li.innerHTML = `<span>${ing}</span> <strong>${totalIngredients[ing]}個</strong>`;
+                neededList.appendChild(li);
+            });
+        }
+
+        // 3. 表示更新：余剰食材 (全食材リスト - 必要食材リスト)
+        const surplusList = document.getElementById('surplus-list');
+        surplusList.innerHTML = '';
+        
+        const surplus = ALL_INGREDIENTS.filter(ing => !totalIngredients[ing]);
+        
+        surplus.forEach(ing => {
+            const li = document.createElement('li');
+            li.className = 'ingredient-item surplus-tag';
+            li.innerHTML = `<span>${ing}</span> <span>Free</span>`;
+            surplusList.appendChild(li);
+        });
+
+        document.getElementById('total-meals').textContent = totalMeals;
+    }
+
+    // 初期実行
+    init();
+</script>
+
+</body>
+</html>
