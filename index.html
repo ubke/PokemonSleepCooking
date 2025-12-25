@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PokémonSleepCooking</title>
+    <title>PokemonSleepCooking</title>
     <style>
         :root {
             --primary: #4A90E2;
@@ -27,23 +27,22 @@
         
         /* タイトルとアイコンの調整 */
         h1 { 
-            font-size: 1.5rem; /* 1.2rem -> 1.5rem に拡大 */
+            font-size: 1.5rem; 
             text-align: center; 
             color: var(--primary); 
             margin-bottom: 15px; 
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px; /* 間隔を少し広げる */
+            gap: 12px;
         }
         
-        /* タイトル用アイコン画像のスタイル */
         .title-icon {
-            height: 2.2rem; /* 画像サイズを拡大 */
+            height: 2.2rem;
             width: auto;
             object-fit: contain;
-            border-radius: 12px; /* 角を丸くする */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 影をつけて立体感を出す */
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         .container { max-width: 900px; margin: 0 auto; }
@@ -56,7 +55,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             margin-bottom: 15px;
             text-align: center;
-            position: relative; /* ボタン配置用 */
+            position: relative;
         }
 
         /* Set Manager Button */
@@ -262,11 +261,36 @@
         .saved-sets-list {
             list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto;
         }
+        
+        /* Drag & Drop Styles */
         .saved-set-item {
             display: flex; justify-content: space-between; align-items: center;
             padding: 10px 0; border-bottom: 1px solid #eee;
+            background: white;
+            transition: background-color 0.2s, transform 0.2s;
         }
         .saved-set-item:last-child { border-bottom: none; }
+        
+        .saved-set-item.dragging {
+            opacity: 0.5;
+            background: #f0f8ff;
+            border: 2px dashed #4A90E2;
+        }
+
+        .drag-handle {
+            cursor: grab;
+            margin-right: 10px;
+            color: #bbb;
+            font-size: 1.2rem;
+            line-height: 1;
+            padding: 5px;
+            touch-action: none; /* スマホでのスクロール防止 */
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+            color: var(--primary);
+        }
+
         .set-name { 
             font-weight: bold; font-size: 0.95rem; cursor: pointer; 
             flex: 1; 
@@ -291,7 +315,7 @@
 <body>
 
 <div class="container">
-    <h1><img src="images/icon.png" alt="" class="title-icon"> PokémonSleepCooking</h1>
+    <h1><img src="images/icon.png" alt="" class="title-icon"> PokemonSleepCooking</h1>
 
     <div class="controls-area">
         <button class="set-manager-btn" onclick="openModal()">📁 料理セットの保存・呼出</button>
@@ -1256,6 +1280,13 @@ const RECIPES = [
         }
         
         // Save current state
+        // Use a timestamp to ensure uniqueness or just key by name (simple)
+        // Here we just key by name, so overwriting is possible (feature, not bug)
+        // To maintain order, we delete and re-add if it exists
+        if(savedSets[name]) {
+            delete savedSets[name];
+        }
+        
         savedSets[name] = JSON.parse(JSON.stringify(state));
         localStorage.setItem('pokeSleepSavedSets', JSON.stringify(savedSets));
         
@@ -1288,7 +1319,7 @@ const RECIPES = [
         }
     }
 
-    // ★追加: 名前変更機能
+    // Rename function
     function renameSet(oldName) {
         const newName = prompt("セット名の変更:", oldName);
         if(newName && newName.trim() && newName !== oldName) {
@@ -1297,7 +1328,7 @@ const RECIPES = [
                 return;
             }
             
-            // 順序を保持しながらキーを変更
+            // Rebuild object to maintain order (mostly)
             const newSavedSets = {};
             Object.keys(savedSets).forEach(key => {
                 if(key === oldName) {
@@ -1312,6 +1343,92 @@ const RECIPES = [
         }
     }
 
+    // === Drag and Drop Logic ===
+    let dragSrcEl = null;
+
+    function handleDragStart(e) {
+        dragSrcEl = this;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+        this.classList.add('dragging');
+    }
+
+    function handleDragOver(e) {
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        e.dataTransfer.dropEffect = 'move';
+        
+        const list = document.getElementById('saved-sets-list');
+        const afterElement = getDragAfterElement(list, e.clientY);
+        
+        if (afterElement == null) {
+            list.appendChild(dragSrcEl);
+        } else {
+            list.insertBefore(dragSrcEl, afterElement);
+        }
+        
+        return false;
+    }
+
+    function handleDragEnter(e) {
+        // this.classList.add('over');
+    }
+
+    function handleDragLeave(e) {
+        // this.classList.remove('over');
+    }
+
+    function handleDrop(e) {
+        if (e.stopPropagation) {
+            e.stopPropagation();
+        }
+        return false;
+    }
+
+    function handleDragEnd(e) {
+        this.classList.remove('dragging');
+        saveReorderedSets();
+    }
+    
+    // Helper to find position
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.saved-set-item:not(.dragging)')];
+
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+    
+    // Touch support for mobile (basic implementation mapped to drag events if possible, 
+    // but standard Drag API doesn't support touch. For simplicity in this vanilla JS file, 
+    // we will stick to PC Drag API as requested, or add basic touch listeners if really needed.
+    // Given the request for "drag and drop", we'll implement standard API first.
+    // To support mobile properly without libraries requires significant code.
+    // We will enable touch-action manipulation for scrolling but rely on PC for sorting for now
+    // or use a very simple swap logic if clicked? No, sticking to PC Drag for now to keep code clean.
+    
+    function saveReorderedSets() {
+        const listItems = document.querySelectorAll('.saved-set-item');
+        const newSavedSets = {};
+        
+        listItems.forEach(li => {
+            const name = li.getAttribute('data-set-name');
+            if(savedSets[name]) {
+                newSavedSets[name] = savedSets[name];
+            }
+        });
+        
+        savedSets = newSavedSets;
+        localStorage.setItem('pokeSleepSavedSets', JSON.stringify(savedSets));
+    }
+
     function renderSavedSets() {
         const list = document.getElementById('saved-sets-list');
         list.innerHTML = '';
@@ -1319,8 +1436,21 @@ const RECIPES = [
         Object.keys(savedSets).forEach(name => {
             const li = document.createElement('li');
             li.className = 'saved-set-item';
+            li.setAttribute('draggable', 'true');
+            li.setAttribute('data-set-name', name);
+            
+            // Add Drag Events
+            li.addEventListener('dragstart', handleDragStart);
+            li.addEventListener('dragover', handleDragOver);
+            li.addEventListener('dragenter', handleDragEnter);
+            li.addEventListener('dragleave', handleDragLeave);
+            li.addEventListener('dragend', handleDragEnd);
+            li.addEventListener('drop', handleDrop);
+            
+            // Mobile Touch Events (Simple swap logic is hard, so we skip complex touch sort for now to keep file small)
             
             li.innerHTML = `
+                <span class="drag-handle">≡</span>
                 <span class="set-name" onclick="loadSet('${name}')" title="クリックして呼出">📁 ${name}</span>
                 <div class="set-actions">
                     <button class="rename-btn" onclick="renameSet('${name}')">✏️</button>
