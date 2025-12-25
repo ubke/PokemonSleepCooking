@@ -345,7 +345,7 @@
     <div class="result-section">
         <div>
             <h2 style="font-size:1rem; border-left:4px solid var(--primary); padding-left:8px; margin:0 0 10px 0;">
-                📦 必要な食材 <span id="needed-count-display" style="font-size:0.9rem; font-weight:normal; margin-left:5px; color:#555;">(計: 0個)</span>
+                📦 週前備蓄に必要な食材 <span id="needed-count-display" style="font-size:0.9rem; font-weight:normal; margin-left:5px; color:#555;">(計: 0個)</span>
             </h2>
             <ul id="needed-list" class="ingredient-list"></ul>
         </div>
@@ -1572,7 +1572,7 @@ const RECIPES = [
             div.innerHTML = `
                 <div class="recipe-meta">
                     <span class="meta-energy">⚡${recipe.energy.toLocaleString()}</span>
-                    <span class="meta-ing">📦${totalIng}</span>
+                    <span class="meta-ing">${totalIng}個</span>
                 </div>
                 <img src="${imgPath}" alt="${recipe.name}" class="recipe-img" onerror="this.style.display='none'">
                 <div class="recipe-name">${recipe.name}</div>
