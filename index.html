@@ -23,18 +23,13 @@
             margin: 0;
             padding: 10px;
             padding-bottom: 160px;
-            
-            /* iOSでの文字の視認性向上設定 */
             -webkit-text-size-adjust: 100%;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-
-            /* ★重要：iOSでのダブルタップズームを無効化する設定 */
             touch-action: manipulation; 
         }
         
-        /* ボタンやカードなど、連打する要素にも念のため適用 */
-        button, input, .recipe-card, .saved-set-item {
+        button, input, .recipe-card {
             touch-action: manipulation;
         }
         
@@ -59,7 +54,6 @@
         
         .container { max-width: 900px; margin: 0 auto; }
         
-        /* Controls Area */
         .controls-area {
             background: white;
             padding: 10px;
@@ -120,7 +114,6 @@
         }
         #hidden-alert.alert-active { color: var(--alert-color); font-weight: bold; }
 
-        /* Recipe Grid */
         .recipe-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -191,7 +184,6 @@
             color: #555; display: flex; align-items: center; justify-content: center; padding: 0; font-size: 0.9rem;
         }
 
-        /* Dashboard */
         .dashboard {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: rgba(255, 255, 255, 0.98);
@@ -204,7 +196,6 @@
         .dash-content { max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;}
         .reset-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.95rem;}
         
-        /* Result Lists */
         .result-section { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 40px;}
         @media (max-width: 600px) { .result-section { grid-template-columns: 1fr; } }
         
@@ -258,7 +249,6 @@
             padding: 0 10px;
         }
 
-        /* Save/Load Area inside Modal */
         .save-input-group {
             display: flex; gap: 10px; margin-bottom: 15px; margin-top: 10px;
         }
@@ -268,6 +258,7 @@
         .save-btn {
             background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap;
         }
+        
         .saved-sets-list {
             list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto;
             -webkit-overflow-scrolling: touch;
@@ -279,6 +270,12 @@
             border-bottom: 1px solid #eee;
             background: white;
             transition: background-color 0.2s, transform 0.2s;
+            /* iOSでの長押しメニュー等を無効化 */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
         .saved-set-item:last-child { border-bottom: none; }
         
@@ -288,14 +285,18 @@
             border: 2px dashed #4A90E2;
         }
 
+        /* ドラッグハンドルのスタイル強化 */
         .drag-handle {
             cursor: grab;
             margin-right: 12px;
             color: #bbb;
-            font-size: 1.4rem;
+            font-size: 1.6rem; /* 少し大きく */
             line-height: 1;
-            padding: 5px;
-            touch-action: none;
+            padding: 5px 10px; /* タップ領域を広く */
+            touch-action: none; /* ここが重要：ブラウザのスクロール等を無効化 */
+        }
+        .drag-handle:active {
+            color: var(--primary);
         }
         
         .set-name { 
@@ -318,7 +319,6 @@
             background: #e74c3c; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
         }
 
-        /* スマホ向け微調整（iPhone/Pixel共通） */
         @media screen and (max-width: 480px) {
             .container { padding: 5px; }
             .recipe-card { padding: 6px 2px; }
@@ -328,26 +328,15 @@
             .sub-btn { width: 28px; height: 28px; font-size: 1rem; }
         }
 
-        /* ★ iPhone (iOS) 専用の修正 ★ */
         @supports (-webkit-touch-callout: none) {
             body {
                 -webkit-text-size-adjust: 100%;
                 -webkit-font-smoothing: antialiased;
             }
-            .recipe-name {
-                font-size: 0.8rem;
-                line-height: 1.35;
-            }
-            .recipe-meta {
-                font-size: 0.75rem;
-            }
-            .filter-btn {
-                font-size: 0.85rem;
-                padding: 7px 12px;
-            }
-            .ingredient-item {
-                padding: 8px 12px;
-            }
+            .recipe-name { font-size: 0.8rem; line-height: 1.35; }
+            .recipe-meta { font-size: 0.75rem; }
+            .filter-btn { font-size: 0.85rem; padding: 7px 12px; }
+            .ingredient-item { padding: 8px 12px; }
             .ing-name { font-size: 0.95rem; }
             .ing-count { font-size: 1rem; }
         }
@@ -1295,7 +1284,6 @@ const RECIPES = [
         document.getElementById('setModal').style.display = 'none';
     }
     
-    // Close modal when clicking outside
     window.onclick = function(event) {
         const modal = document.getElementById('setModal');
         if (event.target == modal) {
@@ -1321,7 +1309,6 @@ const RECIPES = [
             return;
         }
         
-        // Save current state
         if(savedSets[name]) {
             delete savedSets[name];
         }
@@ -1337,7 +1324,6 @@ const RECIPES = [
         if(confirm(`セット「${name}」を読み込みますか？\n現在の選択内容は上書きされます。`)) {
             const set = savedSets[name];
             if(set) {
-                // Ensure state has all current recipes
                 RECIPES.forEach(r => {
                     if (set[r.id] === undefined) set[r.id] = 0;
                 });
@@ -1345,7 +1331,7 @@ const RECIPES = [
                 
                 adjustThresholdBasedOnState();
                 saveAndUpdate();
-                closeModal(); // Close modal after loading
+                closeModal();
             }
         }
     }
@@ -1358,7 +1344,6 @@ const RECIPES = [
         }
     }
 
-    // Rename function
     function renameSet(oldName) {
         const newName = prompt("セット名の変更:", oldName);
         if(newName && newName.trim() && newName !== oldName) {
@@ -1381,9 +1366,10 @@ const RECIPES = [
         }
     }
 
-    // === Drag and Drop Logic ===
+    // === Drag and Drop Logic (Touch Support Added) ===
     let dragSrcEl = null;
 
+    // Mouse Events
     function handleDragStart(e) {
         dragSrcEl = this;
         e.dataTransfer.effectAllowed = 'move';
@@ -1392,9 +1378,7 @@ const RECIPES = [
     }
 
     function handleDragOver(e) {
-        if (e.preventDefault) {
-            e.preventDefault();
-        }
+        if (e.preventDefault) { e.preventDefault(); }
         e.dataTransfer.dropEffect = 'move';
         
         const list = document.getElementById('saved-sets-list');
@@ -1405,22 +1389,38 @@ const RECIPES = [
         } else {
             list.insertBefore(dragSrcEl, afterElement);
         }
-        
         return false;
     }
 
     function handleDragEnter(e) {}
-
     function handleDragLeave(e) {}
+    function handleDrop(e) { if (e.stopPropagation) { e.stopPropagation(); } return false; }
+    function handleDragEnd(e) { this.classList.remove('dragging'); saveReorderedSets(); }
 
-    function handleDrop(e) {
-        if (e.stopPropagation) {
-            e.stopPropagation();
-        }
-        return false;
+    // Touch Events (iOS/Android)
+    function handleTouchStart(e) {
+        // Prevent sorting if touching buttons
+        if (e.target.tagName === 'BUTTON') return;
+        
+        dragSrcEl = this;
+        this.classList.add('dragging');
     }
 
-    function handleDragEnd(e) {
+    function handleTouchMove(e) {
+        if (e.preventDefault) { e.preventDefault(); } // Stop scrolling while dragging
+        
+        const touch = e.touches[0];
+        const list = document.getElementById('saved-sets-list');
+        const afterElement = getDragAfterElement(list, touch.clientY);
+        
+        if (afterElement == null) {
+            list.appendChild(dragSrcEl);
+        } else {
+            list.insertBefore(dragSrcEl, afterElement);
+        }
+    }
+
+    function handleTouchEnd(e) {
         this.classList.remove('dragging');
         saveReorderedSets();
     }
@@ -1464,12 +1464,18 @@ const RECIPES = [
             li.setAttribute('draggable', 'true');
             li.setAttribute('data-set-name', name);
             
+            // Mouse Events
             li.addEventListener('dragstart', handleDragStart);
             li.addEventListener('dragover', handleDragOver);
             li.addEventListener('dragenter', handleDragEnter);
             li.addEventListener('dragleave', handleDragLeave);
             li.addEventListener('dragend', handleDragEnd);
             li.addEventListener('drop', handleDrop);
+
+            // Touch Events (for iOS)
+            li.addEventListener('touchstart', handleTouchStart, {passive: false});
+            li.addEventListener('touchmove', handleTouchMove, {passive: false});
+            li.addEventListener('touchend', handleTouchEnd);
             
             li.innerHTML = `
                 <span class="drag-handle">≡</span>
@@ -1488,7 +1494,6 @@ const RECIPES = [
         }
     }
 
-    // 自動調整ロジック
     function adjustThresholdBasedOnState() {
         let minSelectedEnergy = Infinity;
         let hasSelection = false;
@@ -1514,7 +1519,6 @@ const RECIPES = [
         }
     }
 
-    // === フィルター切替 ===
     function setCategory(type) {
         const types = ['カレー', 'サラダ', 'デザート'];
         if (type === 'all') {
@@ -1602,10 +1606,7 @@ const RECIPES = [
                 increment(recipe.id);
             };
 
-            // 画像のパス： images/料理名.png
             const imgPath = `images/${recipe.name}.png`;
-
-            // 食材総数の計算
             const totalIng = Object.values(recipe.ingredients).reduce((sum, num) => sum + num, 0);
 
             div.innerHTML = `
