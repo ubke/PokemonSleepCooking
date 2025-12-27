@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PokémonSleepCooking</title>
     <style>
         :root {
@@ -17,16 +17,16 @@
             --all-btn-active: #555555;
         }
         body {
-            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            /* フォントを元の指定に戻しました */
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
             padding: 10px;
             padding-bottom: 160px;
-            /* iOSでの文字の視認性向上設定 */
+            
+            /* iPhone対策：これだけ追加（見た目は変えずに、勝手な文字拡大だけ防ぐ） */
             -webkit-text-size-adjust: 100%;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
         
         h1 { 
@@ -61,31 +61,33 @@
             position: relative;
         }
 
+        /* Set Manager Button: サイズを元に戻しました */
         .set-manager-btn {
             display: inline-block;
             width: auto;
             margin-bottom: 12px;
-            padding: 10px 20px; /* タップしやすいように少し拡大 */
+            padding: 8px 16px; /* 元のサイズ */
             background: #6c5ce7;
             color: white;
             border: none;
             border-radius: 20px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .set-manager-btn:active { opacity: 0.8; transform: translateY(1px); }
 
+        /* Filter Buttons: サイズを元に戻しました */
         .filters { display: flex; gap: 5px; justify-content: center; margin-bottom: 10px; flex-wrap: wrap; }
         .filter-btn {
-            padding: 8px 14px; /* スマホで見やすいよう少し拡大 */
+            padding: 6px 12px; /* 元のサイズ */
             border: 1px solid #ddd; 
             border-radius: 15px; 
             background: #fff; 
             cursor: pointer; 
             font-weight: bold; 
-            font-size: 0.85rem; 
+            font-size: 0.8rem; 
             transition: all 0.2s; 
             color: #666;
         }
@@ -93,23 +95,28 @@
         .filter-btn.all-btn { border-color: #666; color: #666; background: #fff; }
         .filter-btn.all-btn.active { background: var(--all-btn-active); color: white; border-color: var(--all-btn-active); }
 
+        /* Energy Input */
         .energy-filter {
             display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: bold;
             color: #555;
         }
         .energy-input {
-            padding: 6px; border: 1px solid #ccc; border-radius: 6px; width: 90px; text-align: center; font-size: 1rem; /* 入力文字サイズ16px以上でiOSのズーム防止 */
+            padding: 5px; border: 1px solid #ccc; border-radius: 6px; width: 80px; text-align: center; font-size: 0.9rem;
         }
 
+        /* Hidden Alert */
         #hidden-alert {
             margin-top: 8px;
             font-size: 0.85rem;
             color: #999;
             transition: color 0.3s;
         }
-        #hidden-alert.alert-active { color: var(--alert-color); font-weight: bold; }
+        #hidden-alert.alert-active {
+            color: var(--alert-color);
+            font-weight: bold;
+        }
 
         /* Recipe Grid */
         .recipe-grid {
@@ -120,7 +127,7 @@
         .recipe-card {
             background: var(--card-bg);
             border-radius: 8px;
-            padding: 8px 4px; /* 横パディングを減らして文字スペース確保 */
+            padding: 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             text-align: center;
             cursor: pointer;
@@ -142,44 +149,43 @@
             display: block;
         }
 
+        /* カード内の情報表示エリア */
         .recipe-meta {
             display: flex;
             justify-content: center;
-            gap: 4px;
-            font-size: 0.75rem; /* 少し大きく */
+            gap: 6px;
+            font-size: 0.7rem;
             font-weight: bold;
             margin-bottom: 2px;
-            line-height: 1.2;
-            flex-wrap: wrap; /* 狭い場合に折り返しを許可 */
+            line-height: 1;
         }
-        .meta-energy { color: var(--energy-color); white-space: nowrap; }
-        .meta-ing { color: #666; white-space: nowrap; }
+        .meta-energy { color: var(--energy-color); }
+        .meta-ing { color: #666; }
 
         .recipe-name { 
-            font-size: 0.8rem; /* 少し大きく */
+            font-size: 0.75rem; 
             font-weight: bold; 
-            line-height: 1.35; 
-            min-height: 2.7em; 
+            line-height: 1.3; 
+            min-height: 2.6em; 
             display: flex; align-items: center; justify-content: center; 
             margin-bottom: 4px;
             overflow: hidden;
-            word-break: break-all; /* 長い単語での崩れ防止 */
         }
         
         .count-badge {
             background: var(--primary); color: white;
-            border-radius: 50%; width: 26px; height: 26px;
+            border-radius: 50%; width: 24px; height: 24px;
             display: flex; align-items: center; justify-content: center;
             font-weight: bold; margin: 0 auto;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
         }
         .hidden { display: none !important; }
 
         .card-controls { display: flex; justify-content: center; margin-top: 5px; }
         .sub-btn { 
-            background: #ccc; border: none; width: 24px; height: 24px; 
+            background: #ccc; border: none; width: 20px; height: 20px; 
             border-radius: 50%; font-weight: bold; cursor: pointer; 
-            color: #555; display: flex; align-items: center; justify-content: center; padding: 0; font-size: 0.9rem;
+            color: #555; display: flex; align-items: center; justify-content: center; padding: 0; font-size: 0.8rem;
         }
 
         /* Dashboard */
@@ -190,10 +196,9 @@
             padding: 10px 15px;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
             z-index: 100;
-            padding-bottom: max(10px, env(safe-area-inset-bottom)); /* iPhone X以降の下部バー対応 */
         }
         .dash-content { max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;}
-        .reset-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.95rem;}
+        .reset-btn { background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem;}
         
         /* Result Lists */
         .result-section { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 40px;}
@@ -202,15 +207,15 @@
         .ingredient-list { list-style: none; padding: 0; margin: 0; }
         .ingredient-item {
             display: flex; justify-content: space-between; align-items: center;
-            background: white; padding: 8px 12px; margin-bottom: 4px; border-radius: 6px;
-            font-size: 0.9rem; /* リスト文字サイズアップ */
+            background: white; padding: 6px 10px; margin-bottom: 4px; border-radius: 6px;
+            font-size: 0.85rem;
         }
         
         .surplus-tag { background: #ffebee; color: #c62828; }
         .needed-tag { background: #e0f2f1; color: #00695c; }
         
-        .ing-name { font-weight: 600; font-size: 0.95rem; }
-        .ing-count { font-weight: bold; font-size: 1rem; }
+        .ing-name { font-weight: 500; font-size: 0.9rem; }
+        .ing-count { font-weight: bold; }
 
         /* === Modal Styles === */
         .modal {
@@ -224,7 +229,6 @@
             overflow: auto; 
             background-color: rgba(0,0,0,0.5);
             backdrop-filter: blur(3px);
-            -webkit-backdrop-filter: blur(3px); /* iOS用 */
         }
 
         .modal-content {
@@ -246,7 +250,12 @@
             font-weight: bold;
             cursor: pointer;
             line-height: 1;
-            padding: 0 10px;
+        }
+        .close-modal:hover,
+        .close-modal:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
         }
 
         /* Save/Load Area inside Modal */
@@ -261,13 +270,12 @@
         }
         .saved-sets-list {
             list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto;
-            -webkit-overflow-scrolling: touch; /* iOSでのスクロールを滑らかに */
         }
         
+        /* Drag & Drop Styles */
         .saved-set-item {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 0; /* タップ領域確保 */
-            border-bottom: 1px solid #eee;
+            padding: 10px 0; border-bottom: 1px solid #eee;
             background: white;
             transition: background-color 0.2s, transform 0.2s;
         }
@@ -281,40 +289,35 @@
 
         .drag-handle {
             cursor: grab;
-            margin-right: 12px;
+            margin-right: 10px;
             color: #bbb;
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             line-height: 1;
             padding: 5px;
             touch-action: none;
         }
-        
+        .drag-handle:active {
+            cursor: grabbing;
+            color: var(--primary);
+        }
+
         .set-name { 
-            font-weight: bold; font-size: 1rem; cursor: pointer; 
+            font-weight: bold; font-size: 0.95rem; cursor: pointer; 
             flex: 1; 
             padding: 5px 0;
         }
-        .set-actions { display: flex; gap: 8px; }
-        
-        /* ボタン類も少し大きく */
+        .set-name:hover {
+            color: var(--primary); text-decoration: underline;
+        }
+        .set-actions { display: flex; gap: 6px; }
         .load-btn {
-            background: #4CAF50; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: bold;
+            background: #4CAF50; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold;
         }
         .rename-btn {
-            background: #f39c12; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+            background: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;
         }
         .delete-btn {
-            background: #e74c3c; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
-        }
-
-        /* ★iPhoneなどスマホ向け微調整 */
-        @media screen and (max-width: 480px) {
-            .container { padding: 5px; }
-            .recipe-card { padding: 6px 2px; }
-            .recipe-name { font-size: 0.85rem; } /* カード内の文字サイズ微増 */
-            .recipe-meta { font-size: 0.8rem; }
-            .count-badge { width: 28px; height: 28px; font-size: 1rem; }
-            .sub-btn { width: 28px; height: 28px; font-size: 1rem; }
+            background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;
         }
 
     </style>
