@@ -23,10 +23,19 @@
             margin: 0;
             padding: 10px;
             padding-bottom: 160px;
+            
             /* iOSでの文字の視認性向上設定 */
             -webkit-text-size-adjust: 100%;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+
+            /* ★重要：iOSでのダブルタップズームを無効化する設定 */
+            touch-action: manipulation; 
+        }
+        
+        /* ボタンやカードなど、連打する要素にも念のため適用 */
+        button, input, .recipe-card, .saved-set-item {
+            touch-action: manipulation;
         }
         
         h1 { 
@@ -65,7 +74,7 @@
             display: inline-block;
             width: auto;
             margin-bottom: 12px;
-            padding: 10px 20px; /* タップしやすいように少し拡大 */
+            padding: 10px 20px;
             background: #6c5ce7;
             color: white;
             border: none;
@@ -79,7 +88,7 @@
 
         .filters { display: flex; gap: 5px; justify-content: center; margin-bottom: 10px; flex-wrap: wrap; }
         .filter-btn {
-            padding: 8px 14px; /* スマホで見やすいよう少し拡大 */
+            padding: 8px 14px;
             border: 1px solid #ddd; 
             border-radius: 15px; 
             background: #fff; 
@@ -100,7 +109,7 @@
             color: #555;
         }
         .energy-input {
-            padding: 6px; border: 1px solid #ccc; border-radius: 6px; width: 90px; text-align: center; font-size: 1rem; /* 入力文字サイズ16px以上でiOSのズーム防止 */
+            padding: 6px; border: 1px solid #ccc; border-radius: 6px; width: 90px; text-align: center; font-size: 1rem;
         }
 
         #hidden-alert {
@@ -120,7 +129,7 @@
         .recipe-card {
             background: var(--card-bg);
             border-radius: 8px;
-            padding: 8px 4px; /* 横パディングを減らして文字スペース確保 */
+            padding: 8px 4px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             text-align: center;
             cursor: pointer;
@@ -146,24 +155,24 @@
             display: flex;
             justify-content: center;
             gap: 4px;
-            font-size: 0.75rem; /* 少し大きく */
+            font-size: 0.75rem;
             font-weight: bold;
             margin-bottom: 2px;
             line-height: 1.2;
-            flex-wrap: wrap; /* 狭い場合に折り返しを許可 */
+            flex-wrap: wrap;
         }
         .meta-energy { color: var(--energy-color); white-space: nowrap; }
         .meta-ing { color: #666; white-space: nowrap; }
 
         .recipe-name { 
-            font-size: 0.8rem; /* 少し大きく */
+            font-size: 0.8rem;
             font-weight: bold; 
             line-height: 1.35; 
             min-height: 2.7em; 
             display: flex; align-items: center; justify-content: center; 
             margin-bottom: 4px;
             overflow: hidden;
-            word-break: break-all; /* 長い単語での崩れ防止 */
+            word-break: break-all;
         }
         
         .count-badge {
@@ -190,7 +199,7 @@
             padding: 10px 15px;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
             z-index: 100;
-            padding-bottom: max(10px, env(safe-area-inset-bottom)); /* iPhone X以降の下部バー対応 */
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
         }
         .dash-content { max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;}
         .reset-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.95rem;}
@@ -203,7 +212,7 @@
         .ingredient-item {
             display: flex; justify-content: space-between; align-items: center;
             background: white; padding: 8px 12px; margin-bottom: 4px; border-radius: 6px;
-            font-size: 0.9rem; /* リスト文字サイズアップ */
+            font-size: 0.9rem;
         }
         
         .surplus-tag { background: #ffebee; color: #c62828; }
@@ -212,7 +221,7 @@
         .ing-name { font-weight: 600; font-size: 0.95rem; }
         .ing-count { font-weight: bold; font-size: 1rem; }
 
-        /* === Modal Styles === */
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed; 
@@ -224,7 +233,7 @@
             overflow: auto; 
             background-color: rgba(0,0,0,0.5);
             backdrop-filter: blur(3px);
-            -webkit-backdrop-filter: blur(3px); /* iOS用 */
+            -webkit-backdrop-filter: blur(3px);
         }
 
         .modal-content {
@@ -261,12 +270,12 @@
         }
         .saved-sets-list {
             list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto;
-            -webkit-overflow-scrolling: touch; /* iOSでのスクロールを滑らかに */
+            -webkit-overflow-scrolling: touch;
         }
         
         .saved-set-item {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 0; /* タップ領域確保 */
+            padding: 12px 0;
             border-bottom: 1px solid #eee;
             background: white;
             transition: background-color 0.2s, transform 0.2s;
@@ -294,9 +303,11 @@
             flex: 1; 
             padding: 5px 0;
         }
+        .set-name:hover {
+            color: var(--primary); text-decoration: underline;
+        }
         .set-actions { display: flex; gap: 8px; }
         
-        /* ボタン類も少し大きく */
         .load-btn {
             background: #4CAF50; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: bold;
         }
@@ -307,14 +318,38 @@
             background: #e74c3c; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
         }
 
-        /* ★iPhoneなどスマホ向け微調整 */
+        /* スマホ向け微調整（iPhone/Pixel共通） */
         @media screen and (max-width: 480px) {
             .container { padding: 5px; }
             .recipe-card { padding: 6px 2px; }
-            .recipe-name { font-size: 0.85rem; } /* カード内の文字サイズ微増 */
+            .recipe-name { font-size: 0.85rem; }
             .recipe-meta { font-size: 0.8rem; }
             .count-badge { width: 28px; height: 28px; font-size: 1rem; }
             .sub-btn { width: 28px; height: 28px; font-size: 1rem; }
+        }
+
+        /* ★ iPhone (iOS) 専用の修正 ★ */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                -webkit-text-size-adjust: 100%;
+                -webkit-font-smoothing: antialiased;
+            }
+            .recipe-name {
+                font-size: 0.8rem;
+                line-height: 1.35;
+            }
+            .recipe-meta {
+                font-size: 0.75rem;
+            }
+            .filter-btn {
+                font-size: 0.85rem;
+                padding: 7px 12px;
+            }
+            .ingredient-item {
+                padding: 8px 12px;
+            }
+            .ing-name { font-size: 0.95rem; }
+            .ing-count { font-size: 1rem; }
         }
 
     </style>
