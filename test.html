@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PokémonSleepCooking</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --bg: #F0F4F8;
+            --card-bg: #FFFFFF;
+            --text: #333;
+            --accent: #FF6B6B;
+            --green: #4CAF50;
+            --energy-color: #F5A623;
+            --alert-color: #e74c3c;
+            --all-btn-active: #555555;
+        }
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 10px;
+            padding-bottom: 160px;
+            -webkit-text-size-adjust: 100%;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            touch-action: manipulation; 
+        }
+        
+        button, input, .recipe-card {
+            touch-action: manipulation;
+        }
+        
+        h1 { 
+            font-size: 1.5rem; 
+            text-align: center; 
+            color: var(--primary); 
+            margin-bottom: 15px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .title-icon {
+            height: 2.2rem;
+            width: auto;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        .controls-area {
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .set-manager-btn {
+            display: inline-block;
+            width: auto;
+            margin-bottom: 12px;
+            padding: 10px 20px;
+            background: #6c5ce7;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .set-manager-btn:active { opacity: 0.8; transform: translateY(1px); }
+
+        .filters { display: flex; gap: 5px; justify-content: center; margin-bottom: 10px; flex-wrap: wrap; }
+        .filter-btn {
+            padding: 8px 14px;
+            border: 1px solid #ddd; 
+            border-radius: 15px; 
+            background: #fff; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 0.85rem; 
+            transition: all 0.2s; 
+            color: #666;
+        }
+        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .filter-btn.all-btn { border-color: #666; color: #666; background: #fff; }
+        .filter-btn.all-btn.active { background: var(--all-btn-active); color: white; border-color: var(--all-btn-active); }
+
+        .energy-filter {
+            display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #555;
+        }
+        .energy-input {
+            padding: 6px; border: 1px solid #ccc; border-radius: 6px; width: 90px; text-align: center; font-size: 1rem;
+        }
+
+        #hidden-alert {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #999;
+            transition: color 0.3s;
+        }
+        #hidden-alert.alert-active { color: var(--alert-color); font-weight: bold; }
+
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 8px;
+        }
+        .recipe-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 8px 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            position: relative;
+        }
+        .recipe-card.selected { border-color: var(--primary); background-color: #f0f8ff; }
+        
+        .recipe-img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            margin: 2px auto;
+            display: block;
+        }
+
+        .recipe-meta {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 2px;
+            line-height: 1.2;
+            flex-wrap: wrap;
+        }
+        .meta-energy { color: var(--energy-color); white-space: nowrap; }
+        .meta-ing { color: #666; white-space: nowrap; }
+
+        .recipe-name { 
+            font-size: 0.8rem;
+            font-weight: bold; 
+            line-height: 1.35; 
+            min-height: 2.7em; 
+            display: flex; align-items: center; justify-content: center; 
+            margin-bottom: 4px;
+            overflow: hidden;
+            word-break: break-all;
+        }
+        
+        .count-badge {
+            background: var(--primary); color: white;
+            border-radius: 50%; width: 26px; height: 26px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; margin: 0 auto;
+            font-size: 0.9rem;
+        }
+        .hidden { display: none !important; }
+
+        .card-controls { display: flex; justify-content: center; margin-top: 5px; }
+        .sub-btn { 
+            background: #ccc; border: none; width: 24px; height: 24px; 
+            border-radius: 50%; font-weight: bold; cursor: pointer; 
+            color: #555; display: flex; align-items: center; justify-content: center; padding: 0; font-size: 0.9rem;
+        }
+
+        .dashboard {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            border-top: 1px solid #ddd;
+            padding: 10px 15px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
+        }
+        .dash-content { max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;}
+        .reset-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.95rem;}
+        
+        .result-section { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 40px;}
+        @media (max-width: 600px) { .result-section { grid-template-columns: 1fr; } }
+        
+        .ingredient-list { list-style: none; padding: 0; margin: 0; }
+        .ingredient-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: white; padding: 8px 12px; margin-bottom: 4px; border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .surplus-tag { background: #ffebee; color: #c62828; }
+        .needed-tag { background: #e0f2f1; color: #00695c; }
+        
+        .ing-name { font-weight: 600; font-size: 0.95rem; }
+        .ing-count { font-weight: bold; font-size: 1rem; }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed; 
+            z-index: 200; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 10px;
+        }
+
+        .save-input-group {
+            display: flex; gap: 10px; margin-bottom: 15px; margin-top: 10px;
+        }
+        .set-name-input {
+            flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;
+        }
+        .save-btn {
+            background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap;
+        }
+        
+        .saved-sets-list {
+            list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .saved-set-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            background: white;
+            transition: background-color 0.2s, transform 0.2s;
+            /* iOSでの長押しメニュー等を無効化 */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        .saved-set-item:last-child { border-bottom: none; }
+        
+        .saved-set-item.dragging {
+            opacity: 0.5;
+            background: #f0f8ff;
+            border: 2px dashed #4A90E2;
+        }
+
+        /* ドラッグハンドルのスタイル強化 */
+        .drag-handle {
+            cursor: grab;
+            margin-right: 12px;
+            color: #bbb;
+            font-size: 1.6rem; /* 少し大きく */
+            line-height: 1;
+            padding: 5px 10px; /* タップ領域を広く */
+            touch-action: none; /* ここが重要：ブラウザのスクロール等を無効化 */
+        }
+        .drag-handle:active {
+            color: var(--primary);
+        }
+        
+        .set-name { 
+            font-weight: bold; font-size: 1rem; cursor: pointer; 
+            flex: 1; 
+            padding: 5px 0;
+        }
+        .set-name:hover {
+            color: var(--primary); text-decoration: underline;
+        }
+        .set-actions { display: flex; gap: 8px; }
+        
+        .load-btn {
+            background: #4CAF50; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: bold;
+        }
+        .rename-btn {
+            background: #f39c12; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+        }
+        .delete-btn {
+            background: #e74c3c; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+        }
+
+        @media screen and (max-width: 480px) {
+            .container { padding: 5px; }
+            .recipe-card { padding: 6px 2px; }
+            .recipe-name { font-size: 0.85rem; }
+            .recipe-meta { font-size: 0.8rem; }
+            .count-badge { width: 28px; height: 28px; font-size: 1rem; }
+            .sub-btn { width: 28px; height: 28px; font-size: 1rem; }
+        }
+
+        @supports (-webkit-touch-callout: none) {
+            body {
+                -webkit-text-size-adjust: 100%;
+                -webkit-font-smoothing: antialiased;
+            }
+            .recipe-name { font-size: 0.8rem; line-height: 1.35; }
+            .recipe-meta { font-size: 0.75rem; }
+            .filter-btn { font-size: 0.85rem; padding: 7px 12px; }
+            .ingredient-item { padding: 8px 12px; }
+            .ing-name { font-size: 0.95rem; }
+            .ing-count { font-size: 1rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1><img src="images/icon.png" alt="" class="title-icon"> PokémonSleepCooking</h1>
+
+    <div class="controls-area">
+        <button class="set-manager-btn" onclick="openModal()">📁 料理セットの保存・呼出</button>
+
+        <div class="filters">
+            <button class="filter-btn all-btn active" id="btn-all" onclick="setCategory('all')">全選択</button>
+            <button class="filter-btn active" id="btn-カレー" onclick="setCategory('カレー')">カレー</button>
+            <button class="filter-btn active" id="btn-サラダ" onclick="setCategory('サラダ')">サラダ</button>
+            <button class="filter-btn active" id="btn-デザート" onclick="setCategory('デザート')">デザート</button>
+        </div>
+        
+        <div class="energy-filter">
+            <label for="energy-threshold">⚡ 基準エナジー:</label>
+            <input type="number" id="energy-threshold" class="energy-input" value="10000" step="1000" oninput="applyFilters()">
+            <span>以下を非表示</span>
+        </div>
+
+        <div id="hidden-alert">選択済みの非表示料理：0</div>
+    </div>
+
+    <div id="recipe-list" class="recipe-grid">
+        </div>
+
+    <div class="result-section">
+        <div>
+            <h2 style="font-size:1rem; border-left:4px solid var(--primary); padding-left:8px; margin:0 0 10px 0;">
+                📦 週前備蓄に必要な食材 <span id="needed-count-display" style="font-size:0.9rem; font-weight:normal; margin-left:5px; color:#555;">(計: 0個)</span>
+            </h2>
+            <ul id="needed-list" class="ingredient-list"></ul>
+        </div>
+        <div>
+            <h2 style="font-size:1rem; border-left:4px solid var(--primary); padding-left:8px; margin:0 0 10px 0;">🗑️ 余剰食材</h2>
+            <ul id="surplus-list" class="ingredient-list"></ul>
+        </div>
+    </div>
+</div>
+
+<div id="setModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h2 style="font-size:1.1rem; margin:0 0 15px 0; color:#555; border-bottom:2px solid #eee; padding-bottom:10px;">📁 料理セットの管理</h2>
+        
+        <div class="save-input-group">
+            <input type="text" id="set-name-input" class="set-name-input" placeholder="セット名 (例: カレー週)">
+            <button class="save-btn" onclick="saveCurrentSet()">保存</button>
+        </div>
+        
+        <ul id="saved-sets-list" class="saved-sets-list"></ul>
+    </div>
+</div>
+
+<div class="dashboard">
+    <div class="dash-content">
+        <div>
+            <span style="font-weight:bold; font-size: 1rem;">選択: <span id="total-meals">0</span>食</span>
+        </div>
+        <button class="reset-btn" onclick="resetAll()">オールクリア</button>
+    </div>
+</div>
+
+<script>
+const ING_ICONS = {
+    "ふといながねぎ": "🎋",
+    "あじわいキノコ": "🍄",
+    "とくせんエッグ": "🥚",
+    "ほっこりポテト": "🥔",
+    "とくせんリンゴ": "🍎",
+    "げきからハーブ": "🌿",
+    "マメミート": "🥓",
+    "モーモーミルク": "🥛",
+    "あまいミツ": "🍯",
+    "ピュアなオイル": "🧴",
+    "あったかジンジャー": "🔥",
+    "あんみんトマト": "🍅",
+    "リラックスカカオ": "🍫",
+    "おいしいシッポ": "🍖",
+    "ワカクサ大豆": "🟢",
+    "ワカクサコーン": "🌽",
+    "めざましコーヒー": "☕",
+    "ずっしりカボチャ": "🎃",
+    "つやつやアボカド": "🥑"
+};
+const ALL_INGREDIENTS = [
+    "ふといながねぎ",
+    "あじわいキノコ",
+    "とくせんエッグ",
+    "ほっこりポテト",
+    "とくせんリンゴ",
+    "げきからハーブ",
+    "マメミート",
+    "モーモーミルク",
+    "あまいミツ",
+    "ピュアなオイル",
+    "あったかジンジャー",
+    "あんみんトマト",
+    "リラックスカカオ",
+    "おいしいシッポ",
+    "ワカクサ大豆",
+    "ワカクサコーン",
+    "めざましコーヒー",
+    "ずっしりカボチャ",
+    "つやつやアボカド"
+];
+const RECIPES = [
+    {
+        "id": "カレー_0",
+        "name": "しんりょくアボカドグラタン",
+        "type": "カレー",
+        "energy": 24802,
+        "ingredients": {
+            "モーモーミルク": 41,
+            "ほっこりポテト": 20,
+            "ピュアなオイル": 32,
+            "つやつやアボカド": 22
+        }
+    },
+    {
+        "id": "カレー_1",
+        "name": "いあいぎりすき焼きカレー",
+        "type": "カレー",
+        "energy": 20655,
+        "ingredients": {
+            "マメミート": 26,
+            "ふといながねぎ": 27,
+            "とくせんエッグ": 22,
+            "あまいミツ": 26
+        }
+    },
+    {
+        "id": "カレー_2",
+        "name": "めざめるパワーシチュー",
+        "type": "カレー",
+        "energy": 19061,
+        "ingredients": {
+            "ワカクサ大豆": 28,
+            "あんみんトマト": 25,
+            "あじわいキノコ": 23,
+            "めざましコーヒー": 16
+        }
+    },
+    {
+        "id": "カレー_3",
+        "name": "なりきりバケッチャシチュー",
+        "type": "カレー",
+        "energy": 15621,
+        "ingredients": {
+            "マメミート": 16,
+            "ほっこりポテト": 18,
+            "あじわいキノコ": 25,
+            "ずっしりカボチャ": 10
+        }
+    },
+    {
+        "id": "カレー_4",
+        "name": "れんごくコーンキーマカレー",
+        "type": "カレー",
+        "energy": 13690,
+        "ingredients": {
+            "マメミート": 24,
+            "げきからハーブ": 27,
+            "あったかジンジャー": 12,
+            "ワカクサコーン": 14
+        }
+    },
+    {
+        "id": "カレー_5",
+        "name": "ニンジャカレー",
+        "type": "カレー",
+        "energy": 9445,
+        "ingredients": {
+            "ワカクサ大豆": 24,
+            "マメミート": 9,
+            "ふといながねぎ": 12,
+            "あじわいキノコ": 5
+        }
+    },
+    {
+        "id": "カレー_6",
+        "name": "ぜったいねむりバターカレー",
+        "type": "カレー",
+        "energy": 9010,
+        "ingredients": {
+            "リラックスカカオ": 12,
+            "モーモーミルク": 10,
+            "ほっこりポテト": 18,
+            "あんみんトマト": 15
+        }
+    },
+    {
+        "id": "カレー_7",
+        "name": "あぶりテールカレー",
+        "type": "カレー",
+        "energy": 7483,
+        "ingredients": {
+            "げきからハーブ": 25,
+            "おいしいシッポ": 8
+        }
+    },
+    {
+        "id": "カレー_8",
+        "name": "からくちネギもりカレー",
+        "type": "カレー",
+        "energy": 5900,
+        "ingredients": {
+            "ふといながねぎ": 14,
+            "げきからハーブ": 8,
+            "あったかジンジャー": 10
+        }
+    },
+    {
+        "id": "カレー_9",
+        "name": "ピヨピヨパンチ辛口カレー",
+        "type": "カレー",
+        "energy": 5702,
+        "ingredients": {
+            "げきからハーブ": 11,
+            "あまいミツ": 11,
+            "めざましコーヒー": 11
+        }
+    },
+    {
+        "id": "カレー_10",
+        "name": "じゅうなんコーンシチュー",
+        "type": "カレー",
+        "energy": 4670,
+        "ingredients": {
+            "モーモーミルク": 8,
+            "ほっこりポテト": 8,
+            "ワカクサコーン": 14
+        }
+    },
+    {
+        "id": "カレー_11",
+        "name": "おやこあいカレー",
+        "type": "カレー",
+        "energy": 4523,
+        "ingredients": {
+            "ほっこりポテト": 4,
+            "とくせんリンゴ": 11,
+            "とくせんエッグ": 8,
+            "あまいミツ": 12
+        }
+    },
+    {
+        "id": "カレー_12",
+        "name": "キノコのほうしカレー",
+        "type": "カレー",
+        "energy": 4162,
+        "ingredients": {
+            "ほっこりポテト": 9,
+            "あじわいキノコ": 14
+        }
+    },
+    {
+        "id": "カレー_13",
+        "name": "ビルドアップマメカレー",
+        "type": "カレー",
+        "energy": 3372,
+        "ingredients": {
+            "ワカクサ大豆": 12,
+            "マメミート": 6,
+            "とくせんエッグ": 4,
+            "げきからハーブ": 4
+        }
+    },
+    {
+        "id": "カレー_14",
+        "name": "ほっこりホワイトシチュー",
+        "type": "カレー",
+        "energy": 3181,
+        "ingredients": {
+            "モーモーミルク": 10,
+            "ほっこりポテト": 8,
+            "あじわいキノコ": 4
+        }
+    },
+    {
+        "id": "カレー_15",
+        "name": "とけるオムカレー",
+        "type": "カレー",
+        "energy": 2150,
+        "ingredients": {
+            "とくせんエッグ": 10,
+            "あんみんトマト": 6
+        }
+    },
+    {
+        "id": "カレー_16",
+        "name": "サンパワートマトカレー",
+        "type": "カレー",
+        "energy": 2078,
+        "ingredients": {
+            "げきからハーブ": 5,
+            "あんみんトマト": 10
+        }
+    },
+    {
+        "id": "カレー_17",
+        "name": "ひでりカツレツカレー",
+        "type": "カレー",
+        "energy": 1942,
+        "ingredients": {
+            "マメミート": 10,
+            "ピュアなオイル": 5
+        }
+    },
+    {
+        "id": "カレー_18",
+        "name": "満腹チーズバーグカレー",
+        "type": "カレー",
+        "energy": 1910,
+        "ingredients": {
+            "モーモーミルク": 8,
+            "マメミート": 8
+        }
+    },
+    {
+        "id": "カレー_19",
+        "name": "マメバーグカレー",
+        "type": "カレー",
+        "energy": 856,
+        "ingredients": {
+            "マメミート": 7
+        }
+    },
+    {
+        "id": "カレー_20",
+        "name": "ベイビィハニーカレー",
+        "type": "カレー",
+        "energy": 839,
+        "ingredients": {
+            "あまいミツ": 7
+        }
+    },
+    {
+        "id": "カレー_21",
+        "name": "たんじゅんホワイトシチュー",
+        "type": "カレー",
+        "energy": 814,
+        "ingredients": {
+            "モーモーミルク": 7
+        }
+    },
+    {
+        "id": "カレー_22",
+        "name": "とくせんリンゴカレー",
+        "type": "カレー",
+        "energy": 748,
+        "ingredients": {
+            "とくせんリンゴ": 7
+        }
+    },
+    {
+        "id": "サラダ_23",
+        "name": "じならしワカモレチップス",
+        "type": "サラダ",
+        "energy": 25162,
+        "ingredients": {
+            "ワカクサ大豆": 22,
+            "げきからハーブ": 30,
+            "ワカクサコーン": 25,
+            "つやつやアボカド": 28
+        }
+    },
+    {
+        "id": "サラダ_24",
+        "name": "まけんきコーヒーサラダ",
+        "type": "サラダ",
+        "energy": 20218,
+        "ingredients": {
+            "マメミート": 28,
+            "ほっこりポテト": 22,
+            "ピュアなオイル": 22,
+            "めざましコーヒー": 28
+        }
+    },
+    {
+        "id": "サラダ_25",
+        "name": "りんごさんヨーグルトサラダ",
+        "type": "サラダ",
+        "energy": 19293,
+        "ingredients": {
+            "モーモーミルク": 18,
+            "とくせんリンゴ": 28,
+            "とくせんエッグ": 35,
+            "あんみんトマト": 23
+        }
+    },
+    {
+        "id": "サラダ_26",
+        "name": "はなふぶきミモザサラダ",
+        "type": "サラダ",
+        "energy": 11811,
+        "ingredients": {
+            "マメミート": 12,
+            "ほっこりポテト": 15,
+            "ピュアなオイル": 17,
+            "とくせんエッグ": 25
+        }
+    },
+    {
+        "id": "サラダ_27",
+        "name": "ニンジャサラダ",
+        "type": "サラダ",
+        "energy": 11659,
+        "ingredients": {
+            "ワカクサ大豆": 19,
+            "ふといながねぎ": 15,
+            "あったかジンジャー": 11,
+            "あじわいキノコ": 12
+        }
+    },
+    {
+        "id": "サラダ_28",
+        "name": "ワカクササラダ",
+        "type": "サラダ",
+        "energy": 11393,
+        "ingredients": {
+            "ほっこりポテト": 9,
+            "ピュアなオイル": 22,
+            "あんみんトマト": 14,
+            "ワカクサコーン": 17
+        }
+    },
+    {
+        "id": "サラダ_29",
+        "name": "クロスチョップドサラダ",
+        "type": "サラダ",
+        "energy": 8755,
+        "ingredients": {
+            "マメミート": 15,
+            "とくせんエッグ": 20,
+            "あんみんトマト": 10,
+            "ワカクサコーン": 11
+        }
+    },
+    {
+        "id": "サラダ_30",
+        "name": "ヤドンテールのペッパーサラダ",
+        "type": "サラダ",
+        "energy": 8169,
+        "ingredients": {
+            "ピュアなオイル": 15,
+            "げきからハーブ": 10,
+            "おいしいシッポ": 10
+        }
+    },
+    {
+        "id": "サラダ_31",
+        "name": "めいそうスイートサラダ",
+        "type": "サラダ",
+        "energy": 7675,
+        "ingredients": {
+            "とくせんリンゴ": 21,
+            "あまいミツ": 16,
+            "ワカクサコーン": 12
+        }
+    },
+    {
+        "id": "サラダ_32",
+        "name": "くだけるアボカドサラダ",
+        "type": "サラダ",
+        "energy": 7125,
+        "ingredients": {
+            "ワカクサ大豆": 18,
+            "ピュアなオイル": 10,
+            "つやつやアボカド": 14
+        }
+    },
+    {
+        "id": "サラダ_33",
+        "name": "キノコのほうしサラダ",
+        "type": "サラダ",
+        "energy": 5859,
+        "ingredients": {
+            "ピュアなオイル": 8,
+            "あんみんトマト": 8,
+            "あじわいキノコ": 17
+        }
+    },
+    {
+        "id": "サラダ_34",
+        "name": "オーバーヒートサラダ",
+        "type": "サラダ",
+        "energy": 5225,
+        "ingredients": {
+            "げきからハーブ": 17,
+            "あんみんトマト": 8,
+            "あったかジンジャー": 10
+        }
+    },
+    {
+        "id": "サラダ_35",
+        "name": "くいしんぼうポテトサラダ",
+        "type": "サラダ",
+        "energy": 5040,
+        "ingredients": {
+            "マメミート": 7,
+            "ほっこりポテト": 14,
+            "とくせんリンゴ": 6,
+            "とくせんエッグ": 9
+        }
+    },
+    {
+        "id": "サラダ_36",
+        "name": "ムラっけチョコミートサラダ",
+        "type": "サラダ",
+        "energy": 3665,
+        "ingredients": {
+            "リラックスカカオ": 14,
+            "マメミート": 9
+        }
+    },
+    {
+        "id": "サラダ_37",
+        "name": "うるおいとうふサラダ",
+        "type": "サラダ",
+        "energy": 3113,
+        "ingredients": {
+            "ワカクサ大豆": 15,
+            "あんみんトマト": 9
+        }
+    },
+    {
+        "id": "サラダ_38",
+        "name": "ばかぢからワイルドサラダ",
+        "type": "サラダ",
+        "energy": 3046,
+        "ingredients": {
+            "マメミート": 9,
+            "ほっこりポテト": 3,
+            "とくせんエッグ": 5,
+            "あったかジンジャー": 6
+        }
+    },
+    {
+        "id": "サラダ_39",
+        "name": "モーモーカプレーゼ",
+        "type": "サラダ",
+        "energy": 2942,
+        "ingredients": {
+            "モーモーミルク": 12,
+            "ピュアなオイル": 5,
+            "あんみんトマト": 6
+        }
+    },
+    {
+        "id": "サラダ_40",
+        "name": "めんえきねぎサラダ",
+        "type": "サラダ",
+        "energy": 2845,
+        "ingredients": {
+            "ふといながねぎ": 10,
+            "あったかジンジャー": 5
+        }
+    },
+    {
+        "id": "サラダ_41",
+        "name": "みだれづきコーンサラダ",
+        "type": "サラダ",
+        "energy": 2785,
+        "ingredients": {
+            "ピュアなオイル": 8,
+            "ワカクサコーン": 9
+        }
+    },
+    {
+        "id": "サラダ_42",
+        "name": "メロメロりんごのチーズサラダ",
+        "type": "サラダ",
+        "energy": 2655,
+        "ingredients": {
+            "モーモーミルク": 5,
+            "ピュアなオイル": 3,
+            "とくせんリンゴ": 15
+        }
+    },
+    {
+        "id": "サラダ_43",
+        "name": "ねっぷうとうふサラダ",
+        "type": "サラダ",
+        "energy": 2114,
+        "ingredients": {
+            "ワカクサ大豆": 10,
+            "げきからハーブ": 6
+        }
+    },
+    {
+        "id": "サラダ_44",
+        "name": "ゆきかきシーザーサラダ",
+        "type": "サラダ",
+        "energy": 1898,
+        "ingredients": {
+            "モーモーミルク": 10,
+            "マメミート": 6
+        }
+    },
+    {
+        "id": "サラダ_45",
+        "name": "あんみんトマトサラダ",
+        "type": "サラダ",
+        "energy": 1045,
+        "ingredients": {
+            "あんみんトマト": 8
+        }
+    },
+    {
+        "id": "サラダ_46",
+        "name": "マメハムサラダ",
+        "type": "サラダ",
+        "energy": 978,
+        "ingredients": {
+            "マメミート": 8
+        }
+    },
+    {
+        "id": "サラダ_47",
+        "name": "とくせんリンゴサラダ",
+        "type": "サラダ",
+        "energy": 855,
+        "ingredients": {
+            "とくせんリンゴ": 8
+        }
+    },
+    {
+        "id": "デザート_48",
+        "name": "ドキドキこわいかおパンケーキ",
+        "type": "デザート",
+        "energy": 24354,
+        "ingredients": {
+            "とくせんエッグ": 24,
+            "あんみんトマト": 29,
+            "あまいミツ": 32,
+            "ずっしりカボチャ": 18
+        }
+    },
+    {
+        "id": "デザート_49",
+        "name": "ドオーのエクレア",
+        "type": "デザート",
+        "energy": 20885,
+        "ingredients": {
+            "リラックスカカオ": 30,
+            "モーモーミルク": 26,
+            "あまいミツ": 22,
+            "めざましコーヒー": 24
+        }
+    },
+    {
+        "id": "デザート_50",
+        "name": "スパークスパイスコーラ",
+        "type": "デザート",
+        "energy": 17494,
+        "ingredients": {
+            "ふといながねぎ": 20,
+            "とくせんリンゴ": 35,
+            "あったかジンジャー": 20,
+            "めざましコーヒー": 12
+        }
+    },
+    {
+        "id": "デザート_51",
+        "name": "フラワーギフトマカロン",
+        "type": "デザート",
+        "energy": 13834,
+        "ingredients": {
+            "リラックスカカオ": 25,
+            "モーモーミルク": 10,
+            "とくせんエッグ": 25,
+            "あまいミツ": 17
+        }
+    },
+    {
+        "id": "デザート_52",
+        "name": "おちゃかいコーンスコーン",
+        "type": "デザート",
+        "energy": 10925,
+        "ingredients": {
+            "モーモーミルク": 9,
+            "とくせんリンゴ": 20,
+            "あったかジンジャー": 20,
+            "ワカクサコーン": 18
+        }
+    },
+    {
+        "id": "デザート_53",
+        "name": "グラスミキサースムージー",
+        "type": "デザート",
+        "energy": 8165,
+        "ingredients": {
+            "モーモーミルク": 14,
+            "あんみんトマト": 16,
+            "つやつやアボカド": 18
+        }
+    },
+    {
+        "id": "デザート_54",
+        "name": "プリンのプリンアラモード",
+        "type": "デザート",
+        "energy": 7594,
+        "ingredients": {
+            "モーモーミルク": 10,
+            "とくせんリンゴ": 10,
+            "とくせんエッグ": 15,
+            "あまいミツ": 20
+        }
+    },
+    {
+        "id": "デザート_55",
+        "name": "かたやぶりコーンティラミス",
+        "type": "デザート",
+        "energy": 7125,
+        "ingredients": {
+            "モーモーミルク": 12,
+            "ワカクサコーン": 14,
+            "めざましコーヒー": 14
+        }
+    },
+    {
+        "id": "デザート_56",
+        "name": "はやおきコーヒーゼリー",
+        "type": "デザート",
+        "energy": 6793,
+        "ingredients": {
+            "モーモーミルク": 14,
+            "あまいミツ": 12,
+            "めざましコーヒー": 16
+        }
+    },
+    {
+        "id": "デザート_57",
+        "name": "だいばくはつポップコーン",
+        "type": "デザート",
+        "energy": 6048,
+        "ingredients": {
+            "モーモーミルク": 7,
+            "ピュアなオイル": 14,
+            "ワカクサコーン": 15
+        }
+    },
+    {
+        "id": "デザート_58",
+        "name": "ちからもちソイドーナッツ",
+        "type": "デザート",
+        "energy": 5547,
+        "ingredients": {
+            "ワカクサ大豆": 16,
+            "リラックスカカオ": 7,
+            "ピュアなオイル": 12
+        }
+    },
+    {
+        "id": "デザート_59",
+        "name": "ネロリのデトックスティー",
+        "type": "デザート",
+        "energy": 5065,
+        "ingredients": {
+            "とくせんリンゴ": 15,
+            "あったかジンジャー": 11,
+            "あじわいキノコ": 9
+        }
+    },
+    {
+        "id": "デザート_60",
+        "name": "ふくつのジンジャークッキー",
+        "type": "デザート",
+        "energy": 4921,
+        "ingredients": {
+            "リラックスカカオ": 5,
+            "とくせんエッグ": 4,
+            "あまいミツ": 14,
+            "あったかジンジャー": 12
+        }
+    },
+    {
+        "id": "デザート_61",
+        "name": "あくまのキッスフルーツオレ",
+        "type": "デザート",
+        "energy": 4734,
+        "ingredients": {
+            "リラックスカカオ": 8,
+            "モーモーミルク": 9,
+            "とくせんリンゴ": 11,
+            "あまいミツ": 7
+        }
+    },
+    {
+        "id": "デザート_62",
+        "name": "あまいかおりチョコケーキ",
+        "type": "デザート",
+        "energy": 3378,
+        "ingredients": {
+            "リラックスカカオ": 8,
+            "モーモーミルク": 7,
+            "あまいミツ": 9
+        }
+    },
+    {
+        "id": "デザート_63",
+        "name": "はなびらのまいチョコタルト",
+        "type": "デザート",
+        "energy": 3314,
+        "ingredients": {
+            "リラックスカカオ": 11,
+            "とくせんリンゴ": 11
+        }
+    },
+    {
+        "id": "デザート_64",
+        "name": "はりきりプロテインスムージー",
+        "type": "デザート",
+        "energy": 3168,
+        "ingredients": {
+            "ワカクサ大豆": 15,
+            "リラックスカカオ": 8
+        }
+    },
+    {
+        "id": "デザート_65",
+        "name": "おおきいマラサダ",
+        "type": "デザート",
+        "energy": 3015,
+        "ingredients": {
+            "モーモーミルク": 7,
+            "ピュアなオイル": 10,
+            "あまいミツ": 6
+        }
+    },
+    {
+        "id": "デザート_66",
+        "name": "かるわざソイケーキ",
+        "type": "デザート",
+        "energy": 1924,
+        "ingredients": {
+            "ワカクサ大豆": 7,
+            "とくせんエッグ": 8
+        }
+    },
+    {
+        "id": "デザート_67",
+        "name": "マイペースやさいジュース",
+        "type": "デザート",
+        "energy": 1924,
+        "ingredients": {
+            "とくせんリンゴ": 7,
+            "あんみんトマト": 9
+        }
+    },
+    {
+        "id": "デザート_68",
+        "name": "ひのこのジンジャーティー",
+        "type": "デザート",
+        "energy": 1913,
+        "ingredients": {
+            "とくせんリンゴ": 7,
+            "あったかジンジャー": 9
+        }
+    },
+    {
+        "id": "デザート_69",
+        "name": "じゅくせいスイートポテト",
+        "type": "デザート",
+        "energy": 1907,
+        "ingredients": {
+            "モーモーミルク": 5,
+            "ほっこりポテト": 9
+        }
+    },
+    {
+        "id": "デザート_70",
+        "name": "ねがいごとアップルパイ",
+        "type": "デザート",
+        "energy": 1748,
+        "ingredients": {
+            "モーモーミルク": 4,
+            "とくせんリンゴ": 12
+        }
+    },
+    {
+        "id": "デザート_71",
+        "name": "クラフトサイコソーダ",
+        "type": "デザート",
+        "energy": 1079,
+        "ingredients": {
+            "あまいミツ": 9
+        }
+    },
+    {
+        "id": "デザート_72",
+        "name": "とくせんリンゴジュース",
+        "type": "デザート",
+        "energy": 855,
+        "ingredients": {
+            "とくせんリンゴ": 8
+        }
+    },
+    {
+        "id": "デザート_73",
+        "name": "モーモーホットミルク",
+        "type": "デザート",
+        "energy": 814,
+        "ingredients": {
+            "モーモーミルク": 7
+        }
+    }
+];
+
+    // === アプリの状態 ===
+    let state = {};
+    let savedSets = {};
+    let activeCategories = new Set(['カレー', 'サラダ', 'デザート']);
+
+    // === 初期化 ===
+    function init() {
+        const saved = localStorage.getItem('pokeSleepPlanner');
+        if (saved) {
+            state = JSON.parse(saved);
+        } else {
+            RECIPES.forEach(r => state[r.id] = 0);
+        }
+        
+        initSavedSets();
+        adjustThresholdBasedOnState();
+        updateFilterButtons();
+        applyFilters();
+        updateCalculation();
+    }
+
+    // === Modal Logic ===
+    function openModal() {
+        document.getElementById('setModal').style.display = 'block';
+    }
+    
+    function closeModal() {
+        document.getElementById('setModal').style.display = 'none';
+    }
+    
+    window.onclick = function(event) {
+        const modal = document.getElementById('setModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+
+    // === 保存セット関連 ===
+    function initSavedSets() {
+        const saved = localStorage.getItem('pokeSleepSavedSets');
+        if(saved) {
+            savedSets = JSON.parse(saved);
+        }
+        renderSavedSets();
+    }
+
+    function saveCurrentSet() {
+        const input = document.getElementById('set-name-input');
+        const name = input.value.trim();
+        
+        if(!name) {
+            alert("セット名を入力してください");
+            return;
+        }
+        
+        if(savedSets[name]) {
+            delete savedSets[name];
+        }
+        
+        savedSets[name] = JSON.parse(JSON.stringify(state));
+        localStorage.setItem('pokeSleepSavedSets', JSON.stringify(savedSets));
+        
+        input.value = '';
+        renderSavedSets();
+    }
+
+    function loadSet(name) {
+        if(confirm(`セット「${name}」を読み込みますか？\n現在の選択内容は上書きされます。`)) {
+            const set = savedSets[name];
+            if(set) {
+                RECIPES.forEach(r => {
+                    if (set[r.id] === undefined) set[r.id] = 0;
+                });
+                state = JSON.parse(JSON.stringify(set));
+                
+                adjustThresholdBasedOnState();
+                saveAndUpdate();
+                closeModal();
+            }
+        }
+    }
+
+    function deleteSet(name) {
+        if(confirm(`セット「${name}」を削除しますか？`)) {
+            delete savedSets[name];
+            localStorage.setItem('pokeSleepSavedSets', JSON.stringify(savedSets));
+            renderSavedSets();
+        }
+    }
+
+    function renameSet(oldName) {
+        const newName = prompt("セット名の変更:", oldName);
+        if(newName && newName.trim() && newName !== oldName) {
+            if(savedSets[newName]) {
+                alert("同名のセットが既に存在します");
+                return;
+            }
+            
+            const newSavedSets = {};
+            Object.keys(savedSets).forEach(key => {
+                if(key === oldName) {
+                    newSavedSets[newName] = savedSets[key];
+                } else {
+                    newSavedSets[key] = savedSets[key];
+                }
+            });
+            savedSets = newSavedSets;
+            localStorage.setItem('pokeSleepSavedSets', JSON.stringify(savedSets));
+            renderSavedSets();
+        }
+    }
+
+    // === Drag and Drop Logic (Touch Support Added) ===
+    let dragSrcEl = null;
+
+    // Mouse Events
+    function handleDragStart(e) {
+        dragSrcEl = this;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+        this.classList.add('dragging');
+    }
+
+    function handleDragOver(e) {
+        if (e.preventDefault) { e.preventDefault(); }
+        e.dataTransfer.dropEffect = 'move';
+        
+        const list = document.getElementById('saved-sets-list');
+        const afterElement = getDragAfterElement(list, e.clientY);
+        
+        if (afterElement == null) {
+            list.appendChild(dragSrcEl);
+        } else {
+            list.insertBefore(dragSrcEl, afterElement);
+        }
+        return false;
+    }
+
+    function handleDragEnter(e) {}
+    function handleDragLeave(e) {}
+    function handleDrop(e) { if (e.stopPropagation) { e.stopPropagation(); } return false; }
+    function handleDragEnd(e) { this.classList.remove('dragging'); saveReorderedSets(); }
+
+    // Touch Events (iOS/Android)
+    function handleTouchStart(e) {
+        // Prevent sorting if touching buttons
+        if (e.target.tagName === 'BUTTON') return;
+        
+        dragSrcEl = this;
+        this.classList.add('dragging');
+    }
+
+    function handleTouchMove(e) {
+        if (e.preventDefault) { e.preventDefault(); } // Stop scrolling while dragging
+        
+        const touch = e.touches[0];
+        const list = document.getElementById('saved-sets-list');
+        const afterElement = getDragAfterElement(list, touch.clientY);
+        
+        if (afterElement == null) {
+            list.appendChild(dragSrcEl);
+        } else {
+            list.insertBefore(dragSrcEl, afterElement);
+        }
+    }
+
+    function handleTouchEnd(e) {
+        this.classList.remove('dragging');
+        saveReorderedSets();
+    }
+    
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.saved-set-item:not(.dragging)')];
+
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+    
+    function saveReorderedSets() {
+        const listItems = document.querySelectorAll('.saved-set-item');
+        const newSavedSets = {};
+        
+        listItems.forEach(li => {
+            const name = li.getAttribute('data-set-name');
+            if(savedSets[name]) {
+                newSavedSets[name] = savedSets[name];
+            }
+        });
+        
+        savedSets = newSavedSets;
+        localStorage.setItem('pokeSleepSavedSets', JSON.stringify(savedSets));
+    }
+
+    function renderSavedSets() {
+        const list = document.getElementById('saved-sets-list');
+        list.innerHTML = '';
+        
+        Object.keys(savedSets).forEach(name => {
+            const li = document.createElement('li');
+            li.className = 'saved-set-item';
+            li.setAttribute('draggable', 'true');
+            li.setAttribute('data-set-name', name);
+            
+            // Mouse Events
+            li.addEventListener('dragstart', handleDragStart);
+            li.addEventListener('dragover', handleDragOver);
+            li.addEventListener('dragenter', handleDragEnter);
+            li.addEventListener('dragleave', handleDragLeave);
+            li.addEventListener('dragend', handleDragEnd);
+            li.addEventListener('drop', handleDrop);
+
+            // Touch Events (for iOS)
+            li.addEventListener('touchstart', handleTouchStart, {passive: false});
+            li.addEventListener('touchmove', handleTouchMove, {passive: false});
+            li.addEventListener('touchend', handleTouchEnd);
+            
+            li.innerHTML = `
+                <span class="drag-handle">≡</span>
+                <span class="set-name" onclick="loadSet('${name}')" title="クリックして呼出">📁 ${name}</span>
+                <div class="set-actions">
+                    <button class="rename-btn" onclick="renameSet('${name}')">✏️</button>
+                    <button class="load-btn" onclick="loadSet('${name}')">呼出</button>
+                    <button class="delete-btn" onclick="deleteSet('${name}')">🗑️</button>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+        
+        if(Object.keys(savedSets).length === 0) {
+            list.innerHTML = '<li style="color:#999; padding:10px; text-align:center; font-size:0.8rem;">保存されたセットはありません</li>';
+        }
+    }
+
+    function adjustThresholdBasedOnState() {
+        let minSelectedEnergy = Infinity;
+        let hasSelection = false;
+
+        Object.keys(state).forEach(id => {
+            if (state[id] > 0) {
+                const recipe = RECIPES.find(r => r.id === id);
+                if (recipe) {
+                    hasSelection = true;
+                    if (recipe.energy < minSelectedEnergy) {
+                        minSelectedEnergy = recipe.energy;
+                    }
+                }
+            }
+        });
+
+        const input = document.getElementById('energy-threshold');
+        const currentThreshold = parseInt(input.value) || 10000;
+
+        if (hasSelection && minSelectedEnergy <= currentThreshold) {
+            const newThreshold = Math.floor((minSelectedEnergy - 1) / 1000) * 1000;
+            input.value = Math.max(0, newThreshold);
+        }
+    }
+
+    function setCategory(type) {
+        const types = ['カレー', 'サラダ', 'デザート'];
+        if (type === 'all') {
+            const isAllSelected = types.every(t => activeCategories.has(t));
+            if (isAllSelected) {
+                activeCategories.clear();
+            } else {
+                activeCategories = new Set(types);
+            }
+        } else {
+            if (activeCategories.has(type)) {
+                activeCategories.delete(type);
+            } else {
+                activeCategories.add(type);
+            }
+        }
+        updateFilterButtons();
+        applyFilters();
+    }
+
+    function updateFilterButtons() {
+        const types = ['カレー', 'サラダ', 'デザート'];
+        
+        types.forEach(type => {
+            const btn = document.getElementById(`btn-${type}`);
+            if (activeCategories.has(type)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        const btnAll = document.getElementById('btn-all');
+        const isAllActive = types.every(t => activeCategories.has(t));
+        if (isAllActive) {
+            btnAll.classList.add('active');
+        } else {
+            btnAll.classList.remove('active');
+        }
+    }
+
+    function updateHiddenAlert(filteredRecipes, threshold) {
+        let hiddenCount = 0;
+
+        Object.keys(state).forEach(id => {
+            if (state[id] > 0) {
+                const recipe = RECIPES.find(r => r.id === id);
+                if (recipe) {
+                    const isVisible = activeCategories.has(recipe.type) && (recipe.energy > threshold);
+                    if (!isVisible) hiddenCount++;
+                }
+            }
+        });
+
+        const alertEl = document.getElementById('hidden-alert');
+        if (hiddenCount > 0) {
+            alertEl.classList.add('alert-active');
+            alertEl.textContent = `⚠️ 選択済みの非表示料理：${hiddenCount}`;
+        } else {
+            alertEl.classList.remove('alert-active');
+            alertEl.textContent = `選択済みの非表示料理：0`;
+        }
+    }
+
+    function applyFilters() {
+        const threshold = parseInt(document.getElementById('energy-threshold').value) || 0;
+        
+        const container = document.getElementById('recipe-list');
+        container.innerHTML = '';
+
+        const filtered = RECIPES.filter(r => {
+            const typeMatch = activeCategories.has(r.type);
+            const energyMatch = r.energy > threshold; 
+            return typeMatch && energyMatch;
+        });
+
+        updateHiddenAlert(filtered, threshold);
+
+        filtered.forEach(recipe => {
+            const count = state[recipe.id] || 0;
+            const div = document.createElement('div');
+            div.className = `recipe-card ${count > 0 ? 'selected' : ''}`;
+            div.onclick = (e) => {
+                if(e.target.tagName === 'BUTTON') return;
+                increment(recipe.id);
+            };
+
+            const imgPath = `images/${recipe.name}.png`;
+            const totalIng = Object.values(recipe.ingredients).reduce((sum, num) => sum + num, 0);
+
+            div.innerHTML = `
+                <div class="recipe-meta">
+                    <span class="meta-energy">⚡${recipe.energy.toLocaleString()}</span>
+                    <span class="meta-ing">${totalIng}個</span>
+                </div>
+                <img src="${imgPath}" alt="${recipe.name}" class="recipe-img" onerror="this.style.display='none'">
+                <div class="recipe-name">${recipe.name}</div>
+                <div class="count-badge ${count === 0 ? 'hidden' : ''}">${count}</div>
+                <div class="card-controls ${count > 0 ? '' : 'hidden'}">
+                    <button class="sub-btn" onclick="decrement('${recipe.id}')">－</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function increment(id) {
+        state[id] = (state[id] || 0) + 1;
+        saveAndUpdate();
+    }
+
+    function decrement(id) {
+        if (state[id] > 0) state[id]--;
+        saveAndUpdate();
+    }
+
+    function resetAll() {
+        Object.keys(state).forEach(k => state[k] = 0);
+        saveAndUpdate();
+    }
+
+    function saveAndUpdate() {
+        localStorage.setItem('pokeSleepPlanner', JSON.stringify(state));
+        applyFilters(); 
+        updateCalculation();
+    }
+
+    function updateCalculation() {
+        const categoryTotals = {
+            'カレー': {},
+            'サラダ': {},
+            'デザート': {}
+        };
+        
+        let totalMeals = 0;
+
+        Object.keys(state).forEach(id => {
+            const count = state[id];
+            if (count > 0) {
+                totalMeals += count;
+                const recipe = RECIPES.find(r => r.id === id);
+                if (recipe) {
+                    const type = recipe.type; 
+                    if (categoryTotals[type]) {
+                        Object.entries(recipe.ingredients).forEach(([ing, num]) => {
+                            categoryTotals[type][ing] = (categoryTotals[type][ing] || 0) + (num * count);
+                        });
+                    }
+                }
+            }
+        });
+
+        const finalIngredients = {};
+        const usedIngredients = new Set();
+        Object.values(categoryTotals).forEach(totals => {
+            Object.keys(totals).forEach(ing => usedIngredients.add(ing));
+        });
+
+        usedIngredients.forEach(ing => {
+            const maxCount = Math.max(
+                categoryTotals['カレー'][ing] || 0,
+                categoryTotals['サラダ'][ing] || 0,
+                categoryTotals['デザート'][ing] || 0
+            );
+            if (maxCount > 0) {
+                finalIngredients[ing] = maxCount;
+            }
+        });
+
+        let totalItems = 0;
+        Object.values(finalIngredients).forEach(count => totalItems += count);
+        
+        const countDisplay = document.getElementById('needed-count-display');
+        if (countDisplay) {
+            countDisplay.textContent = `(計: ${totalItems}個)`;
+        }
+
+        const neededList = document.getElementById('needed-list');
+        neededList.innerHTML = '';
+        
+        const neededKeys = ALL_INGREDIENTS.filter(ing => finalIngredients[ing] > 0);
+        
+        if (neededKeys.length === 0) {
+            neededList.innerHTML = '<li style="color:#999; text-align:center; padding:10px;">料理を選択してください</li>';
+        } else {
+            neededKeys.forEach(ing => {
+                const li = document.createElement('li');
+                li.className = 'ingredient-item needed-tag';
+                const icon = ING_ICONS[ing] || '📦';
+                
+                li.innerHTML = `
+                    <span class="ing-name">${icon} ${ing}</span>
+                    <span class="ing-count">${finalIngredients[ing]}個</span>
+                `;
+                neededList.appendChild(li);
+            });
+        }
+
+        const surplusList = document.getElementById('surplus-list');
+        surplusList.innerHTML = '';
+        const surplus = ALL_INGREDIENTS.filter(ing => !finalIngredients[ing]);
+        
+        surplus.forEach(ing => {
+            const li = document.createElement('li');
+            li.className = 'ingredient-item surplus-tag';
+            const icon = ING_ICONS[ing] || '📦';
+
+            li.innerHTML = `
+                <span class="ing-name">${icon} ${ing}</span>
+            `;
+            surplusList.appendChild(li);
+        });
+
+        document.getElementById('total-meals').textContent = totalMeals;
+    }
+
+    init();
+</script>
+
+</body>
+</html>
