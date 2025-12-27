@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PokémonSleepCooking</title>
     <style>
         :root {
@@ -16,17 +16,18 @@
             --alert-color: #e74c3c;
             --all-btn-active: #555555;
         }
+        
+        /* =========================================
+           基本スタイル（Pixel 9 Pro / PC用）
+           ※以前の「完璧だった頃」の設定です
+           ========================================= */
         body {
-            /* フォントを元の指定に戻しました */
             font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
             padding: 10px;
             padding-bottom: 160px;
-            
-            /* iPhone対策：これだけ追加（見た目は変えずに、勝手な文字拡大だけ防ぐ） */
-            -webkit-text-size-adjust: 100%;
         }
         
         h1 { 
@@ -50,7 +51,6 @@
         
         .container { max-width: 900px; margin: 0 auto; }
         
-        /* Controls Area */
         .controls-area {
             background: white;
             padding: 10px;
@@ -61,12 +61,11 @@
             position: relative;
         }
 
-        /* Set Manager Button: サイズを元に戻しました */
         .set-manager-btn {
             display: inline-block;
             width: auto;
             margin-bottom: 12px;
-            padding: 8px 16px; /* 元のサイズ */
+            padding: 8px 16px;
             background: #6c5ce7;
             color: white;
             border: none;
@@ -78,10 +77,9 @@
         }
         .set-manager-btn:active { opacity: 0.8; transform: translateY(1px); }
 
-        /* Filter Buttons: サイズを元に戻しました */
         .filters { display: flex; gap: 5px; justify-content: center; margin-bottom: 10px; flex-wrap: wrap; }
         .filter-btn {
-            padding: 6px 12px; /* 元のサイズ */
+            padding: 6px 12px; 
             border: 1px solid #ddd; 
             border-radius: 15px; 
             background: #fff; 
@@ -95,7 +93,6 @@
         .filter-btn.all-btn { border-color: #666; color: #666; background: #fff; }
         .filter-btn.all-btn.active { background: var(--all-btn-active); color: white; border-color: var(--all-btn-active); }
 
-        /* Energy Input */
         .energy-filter {
             display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;
             font-size: 0.85rem;
@@ -106,19 +103,14 @@
             padding: 5px; border: 1px solid #ccc; border-radius: 6px; width: 80px; text-align: center; font-size: 0.9rem;
         }
 
-        /* Hidden Alert */
         #hidden-alert {
             margin-top: 8px;
             font-size: 0.85rem;
             color: #999;
             transition: color 0.3s;
         }
-        #hidden-alert.alert-active {
-            color: var(--alert-color);
-            font-weight: bold;
-        }
+        #hidden-alert.alert-active { color: var(--alert-color); font-weight: bold; }
 
-        /* Recipe Grid */
         .recipe-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -149,7 +141,7 @@
             display: block;
         }
 
-        /* カード内の情報表示エリア */
+        /* Pixel用（元通り） */
         .recipe-meta {
             display: flex;
             justify-content: center;
@@ -162,6 +154,7 @@
         .meta-energy { color: var(--energy-color); }
         .meta-ing { color: #666; }
 
+        /* Pixel用（元通り） */
         .recipe-name { 
             font-size: 0.75rem; 
             font-weight: bold; 
@@ -188,7 +181,6 @@
             color: #555; display: flex; align-items: center; justify-content: center; padding: 0; font-size: 0.8rem;
         }
 
-        /* Dashboard */
         .dashboard {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: rgba(255, 255, 255, 0.98);
@@ -200,7 +192,6 @@
         .dash-content { max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;}
         .reset-btn { background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem;}
         
-        /* Result Lists */
         .result-section { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 40px;}
         @media (max-width: 600px) { .result-section { grid-template-columns: 1fr; } }
         
@@ -217,107 +208,66 @@
         .ing-name { font-weight: 500; font-size: 0.9rem; }
         .ing-count { font-weight: bold; }
 
-        /* === Modal Styles === */
+        /* Modal Styles */
         .modal {
-            display: none;
-            position: fixed; 
-            z-index: 200; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.5);
-            backdrop-filter: blur(3px);
+            display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; 
+            background-color: rgba(0,0,0,0.5); backdrop-filter: blur(3px);
         }
-
         .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 90%;
-            max-width: 500px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            position: relative;
+            background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative;
         }
-
-        .close-modal {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 1;
-        }
-        .close-modal:hover,
-        .close-modal:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        /* Save/Load Area inside Modal */
-        .save-input-group {
-            display: flex; gap: 10px; margin-bottom: 15px; margin-top: 10px;
-        }
-        .set-name-input {
-            flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;
-        }
-        .save-btn {
-            background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap;
-        }
-        .saved-sets-list {
-            list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto;
-        }
+        .close-modal { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; }
         
-        /* Drag & Drop Styles */
-        .saved-set-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 0; border-bottom: 1px solid #eee;
-            background: white;
-            transition: background-color 0.2s, transform 0.2s;
-        }
+        .save-input-group { display: flex; gap: 10px; margin-bottom: 15px; margin-top: 10px; }
+        .set-name-input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+        .save-btn { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap; }
+        
+        .saved-sets-list { list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto; }
+        .saved-set-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; background: white; transition: background-color 0.2s, transform 0.2s; }
         .saved-set-item:last-child { border-bottom: none; }
+        .saved-set-item.dragging { opacity: 0.5; background: #f0f8ff; border: 2px dashed #4A90E2; }
         
-        .saved-set-item.dragging {
-            opacity: 0.5;
-            background: #f0f8ff;
-            border: 2px dashed #4A90E2;
-        }
-
-        .drag-handle {
-            cursor: grab;
-            margin-right: 10px;
-            color: #bbb;
-            font-size: 1.2rem;
-            line-height: 1;
-            padding: 5px;
-            touch-action: none;
-        }
-        .drag-handle:active {
-            cursor: grabbing;
-            color: var(--primary);
-        }
-
-        .set-name { 
-            font-weight: bold; font-size: 0.95rem; cursor: pointer; 
-            flex: 1; 
-            padding: 5px 0;
-        }
-        .set-name:hover {
-            color: var(--primary); text-decoration: underline;
-        }
+        .drag-handle { cursor: grab; margin-right: 10px; color: #bbb; font-size: 1.2rem; line-height: 1; padding: 5px; touch-action: none; }
+        .set-name { font-weight: bold; font-size: 0.95rem; cursor: pointer; flex: 1; padding: 5px 0; }
+        .set-name:hover { color: var(--primary); text-decoration: underline; }
         .set-actions { display: flex; gap: 6px; }
-        .load-btn {
-            background: #4CAF50; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold;
-        }
-        .rename-btn {
-            background: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;
-        }
-        .delete-btn {
-            background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;
+        .load-btn { background: #4CAF50; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
+        .rename-btn { background: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+        .delete-btn { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+
+        /* =========================================
+           ★ iPhone (iOS) 専用の修正 ★
+           Pixelには一切影響しません
+           ========================================= */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                /* iPhoneで文字が勝手に拡大するのを防ぐ */
+                -webkit-text-size-adjust: 100%;
+                /* 文字を少し細くくっきりさせる */
+                -webkit-font-smoothing: antialiased;
+            }
+
+            /* カード内の文字をPixelより少しだけ大きく */
+            .recipe-name {
+                font-size: 0.8rem; /* 0.75rem -> 0.8rem */
+                line-height: 1.35;
+            }
+            .recipe-meta {
+                font-size: 0.75rem; /* 0.7rem -> 0.75rem */
+            }
+            
+            /* ボタン内の文字も少しだけ大きく */
+            .filter-btn {
+                font-size: 0.85rem; /* 0.8rem -> 0.85rem */
+                padding: 7px 12px;  /* タップ領域を微増 */
+            }
+            
+            /* リストも見やすく */
+            .ingredient-item {
+                padding: 8px 12px;
+            }
+            .ing-name { font-size: 0.95rem; }
+            .ing-count { font-size: 1rem; }
         }
 
     </style>
