@@ -341,62 +341,64 @@
             .ing-count { font-size: 1rem; }
         }
 
-        /* --- 料理セット管理画面のUI改善（Flexbox完全版） --- */
-
-        /* --- 料理セット管理画面のUI改善（決定版） --- */
+        /* --- 料理セット管理画面のUI改善（リスト領域拡張版） --- */
 
         /* 1. 外枠（ポップアップ全体）の設定 */
         #setModal .modal-content {
-            /* 高さを画面の70%に固定 */
+            /* 高さを画面の70%に「固定」します（小さくしません） */
             height: 70vh !important;      
             max-height: 70vh !important;
             
-            /* 中身をFlexboxで縦に並べる（重要） */
-            display: flex;
-            flex-direction: column;
+            /* 中身を縦に並べてレイアウト制御 */
+            display: flex !important;
+            flex-direction: column !important;
             
-            /* 外枠自体のスクロールは禁止 */
-            overflow: hidden !important; 
             padding-bottom: 0 !important;
+            overflow: hidden !important; 
         }
         
-        /* 2. ヘッダーや入力欄はサイズ固定（縮ませない） */
+        /* 2. 上のパーツ（タイトルや入力欄）はサイズ固定 */
         #setModal .modal-content > h2,
         #setModal .modal-content > .save-input-group,
         #setModal .modal-content > .close-modal {
-            flex-shrink: 0; 
+            flex-shrink: 0 !important; 
         }
         
-        /* 3. リスト表示エリア（ここを自動で広げる） */
-        /* ★画像で判明した ID: saved-sets-list を直接指定 */
+        /* 3. リスト部分（ここを修正！） */
         #saved-sets-list {
-            flex-grow: 1;           /* 残りのスペース（下の空白）を全て埋める！ */
-            overflow-y: auto;       /* スクロールバーをここに出す */
-            min-height: 0;          /* バグ防止用 */
-            padding-bottom: 20px;   /* 下部の余白 */
-            margin-top: 10px;       /* 上の入力欄との間隔 */
+            /* ★ここが重要：残りのスペース（下の空白部分）を全てこのリストが占領する設定 */
+            flex-grow: 1 !important;
             
-            /* iOSでのスクロールを滑らかにする */
+            /* 高さ制限を解除して、枠いっぱいまで広げる */
+            height: auto !important;
+            max-height: none !important;
+            
+            /* 中身があふれたらスクロール */
+            overflow-y: auto !important; 
+            
+            /* 見た目の調整 */
+            margin-top: 10px;
+            padding-bottom: 20px; 
+            min-height: 0; 
+            
+            /* iOS用慣性スクロール */
             -webkit-overflow-scrolling: touch; 
         }
         
-        /* 4. スクロールバーのデザイン（Android/PC用） */
+        /* --- スクロールバーのデザイン --- */
         #saved-sets-list::-webkit-scrollbar {
-            width: 20px; /* 指で操作しやすい太さ */
+            width: 20px; 
         }
-        
         #saved-sets-list::-webkit-scrollbar-track {
             background: #f1f1f1; 
             border-radius: 10px;
         }
-        
         #saved-sets-list::-webkit-scrollbar-thumb {
             background-color: #888; 
             border-radius: 10px;    
             border: 4px solid transparent; 
             background-clip: content-box;
         }
-        
         #saved-sets-list::-webkit-scrollbar-thumb:hover {
             background-color: #555; 
         }
