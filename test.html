@@ -364,28 +364,35 @@
             flex-shrink: 0 !important; 
         }
         
-        /* 3. リスト部分（ここを修正！） */
+        /* 3. リスト部分（iOS対策強化版） */
         #saved-sets-list {
-            /* ★ここが重要：残りのスペース（下の空白部分）を全てこのリストが占領する設定 */
+            /* サイズ設定：余白を埋めて最大まで広げる */
             flex-grow: 1 !important;
-            
-            /* 高さ制限を解除して、枠いっぱいまで広げる */
             height: auto !important;
             max-height: none !important;
+            min-height: 0;
             
-            /* 中身があふれたらスクロール */
+            /* --- ここがiOS対策の肝です --- */
+            
+            /* 1. スクロールを「常に許可」する設定に変更 */
             overflow-y: auto !important; 
             
-            /* 見た目の調整 */
+            /* 2. スクロール操作をこのエリア内に「閉じ込める」 */
+            /* これがないと、指の動きがポップアップ全体に伝わってしまいます */
+            overscroll-behavior-y: contain !important;
+            
+            /* 3. 縦スクロール操作をブラウザに明示的に認識させる */
+            touch-action: pan-y !important;
+            
+            /* 4. iOS慣性スクロールの有効化 */
+            -webkit-overflow-scrolling: touch !important;
+        
+            /* --- 見た目の調整 --- */
             margin-top: 10px;
             padding-bottom: 20px; 
-            min-height: 0; 
-            
-            /* iOS用慣性スクロール */
-            -webkit-overflow-scrolling: touch; 
         }
         
-        /* --- スクロールバーのデザイン --- */
+        /* （スクロールバーのデザイン設定はそのまま残します） */
         #saved-sets-list::-webkit-scrollbar {
             width: 20px; 
         }
