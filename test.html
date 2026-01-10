@@ -346,9 +346,13 @@
         /* 1. モーダルの高さを広げる設定 */
         /* 正しいID: setModal を指定 */
         #setModal .modal-content {
-            max-height: 80vh !important; /* 高さを画面の80%まで広げる */
-            overflow-y: auto;            /* コンテンツ自体にスクロールバーをつける */
-            scrollbar-width: auto;       /* Firefox用 */
+            /* 画面の高さの80%まで強制的に広げます */
+            height: 80vh !important;      
+            max-height: 80vh !important; 
+            
+            /* スクロール設定 */
+            overflow-y: auto;            
+            scrollbar-width: auto;
         }
         
         /* 2. スクロールバーのデザイン（Chrome, Safari, Android用） */
