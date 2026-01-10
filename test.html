@@ -343,61 +343,62 @@
 
         /* --- 料理セット管理画面のUI改善（Flexbox完全版） --- */
 
+        /* --- 料理セット管理画面のUI改善（決定版） --- */
+
         /* 1. 外枠（ポップアップ全体）の設定 */
         #setModal .modal-content {
-            /* 高さの設定：80%だと大きすぎるとのことなので70%に修正 */
+            /* 高さを画面の70%に固定 */
             height: 70vh !important;      
             max-height: 70vh !important;
             
-            /* 重要な変更：Flexboxを使って中身の配置を制御します */
+            /* 中身をFlexboxで縦に並べる（重要） */
             display: flex;
             flex-direction: column;
             
-            /* 外枠自体のスクロールは禁止（中のリストだけスクロールさせるため） */
+            /* 外枠自体のスクロールは禁止 */
             overflow: hidden !important; 
             padding-bottom: 0 !important;
         }
         
-        /* 2. ヘッダーや入力欄が潰れないように固定 */
+        /* 2. ヘッダーや入力欄はサイズ固定（縮ませない） */
         #setModal .modal-content > h2,
         #setModal .modal-content > .save-input-group,
         #setModal .modal-content > .close-modal {
-            flex-shrink: 0; /* これらは縮ませない */
+            flex-shrink: 0; 
         }
         
-        /* 3. リスト表示エリア（入力欄の下にある要素を自動で広げる） */
-        /* これが「空白」を埋めて、隠れている6つ目を表示させる鍵です */
-        #setModal .modal-content > .save-input-group ~ div,
-        #setModal .modal-content > .save-input-group ~ ul {
-            flex-grow: 1;           /* 残りのスペース（下の空白）を全て埋める */
-            overflow-y: auto;       /* スクロールバーをこのエリアに出す */
-            min-height: 0;          /* 表示崩れ防止 */
+        /* 3. リスト表示エリア（ここを自動で広げる） */
+        /* ★画像で判明した ID: saved-sets-list を直接指定 */
+        #saved-sets-list {
+            flex-grow: 1;           /* 残りのスペース（下の空白）を全て埋める！ */
+            overflow-y: auto;       /* スクロールバーをここに出す */
+            min-height: 0;          /* バグ防止用 */
             padding-bottom: 20px;   /* 下部の余白 */
+            margin-top: 10px;       /* 上の入力欄との間隔 */
             
             /* iOSでのスクロールを滑らかにする */
             -webkit-overflow-scrolling: touch; 
         }
         
-        /* 4. スクロールバーのデザイン（Android用） */
-        /* ※iPhoneではこの設定が無視されることが多いですが、
-           上の設定で操作エリア自体が広がるので、バーを触らなくてもスクロールしやすくなります */
-        #setModal .modal-content > .save-input-group ~ div::-webkit-scrollbar,
-        #setModal .modal-content > .save-input-group ~ ul::-webkit-scrollbar {
-            width: 20px; /* Android等では太くなります */
+        /* 4. スクロールバーのデザイン（Android/PC用） */
+        #saved-sets-list::-webkit-scrollbar {
+            width: 20px; /* 指で操作しやすい太さ */
         }
         
-        #setModal .modal-content > .save-input-group ~ div::-webkit-scrollbar-track,
-        #setModal .modal-content > .save-input-group ~ ul::-webkit-scrollbar-track {
+        #saved-sets-list::-webkit-scrollbar-track {
             background: #f1f1f1; 
             border-radius: 10px;
         }
         
-        #setModal .modal-content > .save-input-group ~ div::-webkit-scrollbar-thumb,
-        #setModal .modal-content > .save-input-group ~ ul::-webkit-scrollbar-thumb {
+        #saved-sets-list::-webkit-scrollbar-thumb {
             background-color: #888; 
             border-radius: 10px;    
             border: 4px solid transparent; 
             background-clip: content-box;
+        }
+        
+        #saved-sets-list::-webkit-scrollbar-thumb:hover {
+            background-color: #555; 
         }
 
     </style>
