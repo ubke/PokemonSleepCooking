@@ -1425,10 +1425,10 @@ const RECIPES = [
         }
     }
 
-    // === Drag and Drop Logic (Touch Support Added) ===
+    // === Drag and Drop Logic (修正版) ===
     let dragSrcEl = null;
 
-    // Mouse Events
+    // --- PC向け (マウスイベント) ---
     function handleDragStart(e) {
         dragSrcEl = this;
         e.dataTransfer.effectAllowed = 'move';
@@ -1456,34 +1456,39 @@ const RECIPES = [
     function handleDrop(e) { if (e.stopPropagation) { e.stopPropagation(); } return false; }
     function handleDragEnd(e) { this.classList.remove('dragging'); saveReorderedSets(); }
 
-    // Touch Events (iOS/Android)
+    // --- スマホ向け (タッチイベント) ---
     function handleTouchStart(e) {
-        // Prevent sorting if touching buttons
-        if (e.target.tagName === 'BUTTON') return;
-        
-        dragSrcEl = this;
-        this.classList.add('dragging');
+        // ★修正ポイント: 青いゾーン(this)の親である「行全体(li)」をドラッグ対象にする
+        dragSrcEl = this.closest('li');
+        if (dragSrcEl) {
+            dragSrcEl.classList.add('dragging');
+        }
     }
 
     function handleTouchMove(e) {
-        if (e.preventDefault) { e.preventDefault(); } // Stop scrolling while dragging
+        if (e.cancelable) e.preventDefault(); // スクロールを止める
         
         const touch = e.touches[0];
         const list = document.getElementById('saved-sets-list');
         const afterElement = getDragAfterElement(list, touch.clientY);
         
-        if (afterElement == null) {
-            list.appendChild(dragSrcEl);
-        } else {
-            list.insertBefore(dragSrcEl, afterElement);
+        if (dragSrcEl) {
+            if (afterElement == null) {
+                list.appendChild(dragSrcEl);
+            } else {
+                list.insertBefore(dragSrcEl, afterElement);
+            }
         }
     }
 
     function handleTouchEnd(e) {
-        this.classList.remove('dragging');
+        if (dragSrcEl) {
+            dragSrcEl.classList.remove('dragging');
+        }
         saveReorderedSets();
     }
     
+    // --- 共通処理 ---
     function getDragAfterElement(container, y) {
         const draggableElements = [...container.querySelectorAll('.saved-set-item:not(.dragging)')];
 
@@ -1513,6 +1518,7 @@ const RECIPES = [
         localStorage.setItem('pokeSleepSavedSets', JSON.stringify(savedSets));
     }
 
+    // --- リスト描画関数 (ゾーン分け適用) ---
     function renderSavedSets() {
         const list = document.getElementById('saved-sets-list');
         list.innerHTML = '';
@@ -1521,19 +1527,18 @@ const RECIPES = [
             const li = document.createElement('li');
             li.className = 'saved-set-item';
             
-            // PC向けのマウスドラッグ設定（これは行全体のままでOK）
+            // PC向け設定
             li.setAttribute('draggable', 'true');
             li.setAttribute('data-set-name', name);
             
-            // Mouse Events (PC用)
             li.addEventListener('dragstart', handleDragStart);
             li.addEventListener('dragover', handleDragOver);
             li.addEventListener('dragenter', handleDragEnter);
             li.addEventListener('dragleave', handleDragLeave);
             li.addEventListener('dragend', handleDragEnd);
             li.addEventListener('drop', handleDrop);
-    
-            // ★変更点1: HTML構造を変えて、「左側(ドラッグ用)」と「右側(ボタン)」を分けます
+
+            // HTML構造：左(ドラッグ)と右(操作)に分割
             li.innerHTML = `
                 <div class="drag-touch-zone" style="display: flex; align-items: center; flex-grow: 1; cursor: grab; touch-action: none;">
                     <span class="drag-handle" style="margin-right: 10px;">≡</span>
@@ -1544,13 +1549,10 @@ const RECIPES = [
                     <button class="load-btn" onclick="loadSet('${name}')">呼出</button>
                     <button class="delete-btn" onclick="deleteSet('${name}')">🗑️</button>
                 </div>
-                `;
-    
-            // ★変更点2: iOS用のタッチイベントを、li全体ではなく「左側のエリア」だけに付け替える
-            // これにより、右側のボタンエリアを触ってもドラッグ判定されず、スクロールができるようになります
+            `;
+
+            // iOS向けタッチ設定（左側のゾーンにのみ適用）
             const touchZone = li.querySelector('.drag-touch-zone');
-    
-            // Touch Events (for iOS) - Attach ONLY to the left zone
             touchZone.addEventListener('touchstart', handleTouchStart, {passive: false});
             touchZone.addEventListener('touchmove', handleTouchMove, {passive: false});
             touchZone.addEventListener('touchend', handleTouchEnd);
