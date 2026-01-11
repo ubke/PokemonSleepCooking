@@ -1458,32 +1458,38 @@ const RECIPES = [
 
     // Touch Events (iOS/Android)
     function handleTouchStart(e) {
-        // Prevent sorting if touching buttons
-        if (e.target.tagName === 'BUTTON') return;
-        
-        dragSrcEl = this;
-        this.classList.add('dragging');
+        // ★変更点: 「this(青いゾーン)」の親である「li(行全体)」を探してドラッグ対象にします
+        dragSrcEl = this.closest('li');
+        if (dragSrcEl) {
+            dragSrcEl.classList.add('dragging');
+        }
     }
 
     function handleTouchMove(e) {
-        if (e.preventDefault) { e.preventDefault(); } // Stop scrolling while dragging
+        if (e.preventDefault) { e.preventDefault(); } // ドラッグ中はスクロール禁止
         
         const touch = e.touches[0];
         const list = document.getElementById('saved-sets-list');
         const afterElement = getDragAfterElement(list, touch.clientY);
         
-        if (afterElement == null) {
-            list.appendChild(dragSrcEl);
-        } else {
-            list.insertBefore(dragSrcEl, afterElement);
+        if (dragSrcEl) {
+            if (afterElement == null) {
+                list.appendChild(dragSrcEl);
+            } else {
+                list.insertBefore(dragSrcEl, afterElement);
+            }
         }
     }
 
     function handleTouchEnd(e) {
-        this.classList.remove('dragging');
+        // ★変更点: dragSrcElに対してクラス削除を実行
+        if (dragSrcEl) {
+            dragSrcEl.classList.remove('dragging');
+        }
         saveReorderedSets();
     }
     
+    // --- (変更なし) 位置計算ロジック ---
     function getDragAfterElement(container, y) {
         const draggableElements = [...container.querySelectorAll('.saved-set-item:not(.dragging)')];
 
@@ -1498,6 +1504,7 @@ const RECIPES = [
         }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
     
+    // --- (変更なし) 保存ロジック ---
     function saveReorderedSets() {
         const listItems = document.querySelectorAll('.saved-set-item');
         const newSavedSets = {};
@@ -1513,6 +1520,7 @@ const RECIPES = [
         localStorage.setItem('pokeSleepSavedSets', JSON.stringify(savedSets));
     }
 
+    // --- (★変更あり) リスト描画 ---
     function renderSavedSets() {
         const list = document.getElementById('saved-sets-list');
         list.innerHTML = '';
@@ -1520,10 +1528,12 @@ const RECIPES = [
         Object.keys(savedSets).forEach(name => {
             const li = document.createElement('li');
             li.className = 'saved-set-item';
+            
+            // PC向け設定
             li.setAttribute('draggable', 'true');
             li.setAttribute('data-set-name', name);
             
-            // Mouse Events
+            // Mouse Events (PC用はそのまま)
             li.addEventListener('dragstart', handleDragStart);
             li.addEventListener('dragover', handleDragOver);
             li.addEventListener('dragenter', handleDragEnter);
@@ -1531,20 +1541,26 @@ const RECIPES = [
             li.addEventListener('dragend', handleDragEnd);
             li.addEventListener('drop', handleDrop);
 
-            // Touch Events (for iOS)
-            li.addEventListener('touchstart', handleTouchStart, {passive: false});
-            li.addEventListener('touchmove', handleTouchMove, {passive: false});
-            li.addEventListener('touchend', handleTouchEnd);
-            
+            // ★変更点1: HTML構造を「左(ドラッグ用)」と「右(ボタン用)」に分割
             li.innerHTML = `
-                <span class="drag-handle">≡</span>
-                <span class="set-name" onclick="loadSet('${name}')" title="クリックして呼出">📁 ${name}</span>
+                <div class="drag-touch-zone" style="display: flex; align-items: center; flex-grow: 1; cursor: grab; touch-action: none; padding-right: 10px;">
+                    <span class="drag-handle" style="margin-right: 10px;">≡</span>
+                    <span class="set-name" onclick="loadSet('${name}')" title="クリックして呼出" style="flex-grow: 1;">📁 ${name}</span>
+                </div>
                 <div class="set-actions">
                     <button class="rename-btn" onclick="renameSet('${name}')">✏️</button>
                     <button class="load-btn" onclick="loadSet('${name}')">呼出</button>
                     <button class="delete-btn" onclick="deleteSet('${name}')">🗑️</button>
                 </div>
             `;
+
+            // ★変更点2: スマホのタッチイベントを「左側のゾーン」だけに設定
+            // これで右側のボタンエリアはスクロールできるようになります
+            const touchZone = li.querySelector('.drag-touch-zone');
+            touchZone.addEventListener('touchstart', handleTouchStart, {passive: false});
+            touchZone.addEventListener('touchmove', handleTouchMove, {passive: false});
+            touchZone.addEventListener('touchend', handleTouchEnd);
+            
             list.appendChild(li);
         });
         
