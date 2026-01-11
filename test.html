@@ -1520,33 +1520,44 @@ const RECIPES = [
         Object.keys(savedSets).forEach(name => {
             const li = document.createElement('li');
             li.className = 'saved-set-item';
+            
+            // PC向けのマウスドラッグ設定（これは行全体のままでOK）
             li.setAttribute('draggable', 'true');
             li.setAttribute('data-set-name', name);
             
-            // Mouse Events
+            // Mouse Events (PC用)
             li.addEventListener('dragstart', handleDragStart);
             li.addEventListener('dragover', handleDragOver);
             li.addEventListener('dragenter', handleDragEnter);
             li.addEventListener('dragleave', handleDragLeave);
             li.addEventListener('dragend', handleDragEnd);
             li.addEventListener('drop', handleDrop);
-
-            // Touch Events (for iOS)
-            li.addEventListener('touchstart', handleTouchStart, {passive: false});
-            li.addEventListener('touchmove', handleTouchMove, {passive: false});
-            li.addEventListener('touchend', handleTouchEnd);
-            
+    
+            // ★変更点1: HTML構造を変えて、「左側(ドラッグ用)」と「右側(ボタン)」を分けます
             li.innerHTML = `
-                <span class="drag-handle">≡</span>
-                <span class="set-name" onclick="loadSet('${name}')" title="クリックして呼出">📁 ${name}</span>
+                <div class="drag-touch-zone" style="display: flex; align-items: center; flex-grow: 1; cursor: grab; touch-action: none;">
+                    <span class="drag-handle" style="margin-right: 10px;">≡</span>
+                    <span class="set-name" onclick="loadSet('${name}')" title="クリックして呼出" style="flex-grow: 1;">📁 ${name}</span>
+                </div>
                 <div class="set-actions">
                     <button class="rename-btn" onclick="renameSet('${name}')">✏️</button>
                     <button class="load-btn" onclick="loadSet('${name}')">呼出</button>
                     <button class="delete-btn" onclick="deleteSet('${name}')">🗑️</button>
                 </div>
-            `;
+                `;
+    
+            // ★変更点2: iOS用のタッチイベントを、li全体ではなく「左側のエリア」だけに付け替える
+            // これにより、右側のボタンエリアを触ってもドラッグ判定されず、スクロールができるようになります
+            const touchZone = li.querySelector('.drag-touch-zone');
+    
+            // Touch Events (for iOS) - Attach ONLY to the left zone
+            touchZone.addEventListener('touchstart', handleTouchStart, {passive: false});
+            touchZone.addEventListener('touchmove', handleTouchMove, {passive: false});
+            touchZone.addEventListener('touchend', handleTouchEnd);
+            
             list.appendChild(li);
         });
+    }
         
         if(Object.keys(savedSets).length === 0) {
             list.innerHTML = '<li style="color:#999; padding:10px; text-align:center; font-size:0.8rem;">保存されたセットはありません</li>';
