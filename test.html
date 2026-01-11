@@ -1425,10 +1425,10 @@ const RECIPES = [
         }
     }
 
-    // === Drag and Drop Logic (修正版) ===
+    // === Drag and Drop Logic (Touch Support Added) ===
     let dragSrcEl = null;
 
-    // --- PC向け (マウスイベント) ---
+    // Mouse Events
     function handleDragStart(e) {
         dragSrcEl = this;
         e.dataTransfer.effectAllowed = 'move';
@@ -1456,39 +1456,34 @@ const RECIPES = [
     function handleDrop(e) { if (e.stopPropagation) { e.stopPropagation(); } return false; }
     function handleDragEnd(e) { this.classList.remove('dragging'); saveReorderedSets(); }
 
-    // --- スマホ向け (タッチイベント) ---
+    // Touch Events (iOS/Android)
     function handleTouchStart(e) {
-        // ★修正ポイント: 青いゾーン(this)の親である「行全体(li)」をドラッグ対象にする
-        dragSrcEl = this.closest('li');
-        if (dragSrcEl) {
-            dragSrcEl.classList.add('dragging');
-        }
+        // Prevent sorting if touching buttons
+        if (e.target.tagName === 'BUTTON') return;
+        
+        dragSrcEl = this;
+        this.classList.add('dragging');
     }
 
     function handleTouchMove(e) {
-        if (e.cancelable) e.preventDefault(); // スクロールを止める
+        if (e.cancelable) e.preventDefault(); // Stop scrolling while dragging
         
         const touch = e.touches[0];
         const list = document.getElementById('saved-sets-list');
         const afterElement = getDragAfterElement(list, touch.clientY);
         
-        if (dragSrcEl) {
-            if (afterElement == null) {
-                list.appendChild(dragSrcEl);
-            } else {
-                list.insertBefore(dragSrcEl, afterElement);
-            }
+        if (afterElement == null) {
+            list.appendChild(dragSrcEl);
+        } else {
+            list.insertBefore(dragSrcEl, afterElement);
         }
     }
 
     function handleTouchEnd(e) {
-        if (dragSrcEl) {
-            dragSrcEl.classList.remove('dragging');
-        }
+        this.classList.remove('dragging');
         saveReorderedSets();
     }
     
-    // --- 共通処理 ---
     function getDragAfterElement(container, y) {
         const draggableElements = [...container.querySelectorAll('.saved-set-item:not(.dragging)')];
 
@@ -1518,7 +1513,6 @@ const RECIPES = [
         localStorage.setItem('pokeSleepSavedSets', JSON.stringify(savedSets));
     }
 
-    // --- リスト描画関数 (ゾーン分け適用) ---
     function renderSavedSets() {
         const list = document.getElementById('saved-sets-list');
         list.innerHTML = '';
@@ -1526,11 +1520,10 @@ const RECIPES = [
         Object.keys(savedSets).forEach(name => {
             const li = document.createElement('li');
             li.className = 'saved-set-item';
-            
-            // PC向け設定
             li.setAttribute('draggable', 'true');
             li.setAttribute('data-set-name', name);
             
+            // Mouse Events
             li.addEventListener('dragstart', handleDragStart);
             li.addEventListener('dragover', handleDragOver);
             li.addEventListener('dragenter', handleDragEnter);
@@ -1538,25 +1531,20 @@ const RECIPES = [
             li.addEventListener('dragend', handleDragEnd);
             li.addEventListener('drop', handleDrop);
 
-            // HTML構造：左(ドラッグ)と右(操作)に分割
+            // Touch Events (for iOS)
+            li.addEventListener('touchstart', handleTouchStart, {passive: false});
+            li.addEventListener('touchmove', handleTouchMove, {passive: false});
+            li.addEventListener('touchend', handleTouchEnd);
+            
             li.innerHTML = `
-                <div class="drag-touch-zone" style="display: flex; align-items: center; flex-grow: 1; cursor: grab; touch-action: none;">
-                    <span class="drag-handle" style="margin-right: 10px;">≡</span>
-                    <span class="set-name" onclick="loadSet('${name}')" title="クリックして呼出" style="flex-grow: 1;">📁 ${name}</span>
-                </div>
+                <span class="drag-handle">≡</span>
+                <span class="set-name" onclick="loadSet('${name}')" title="クリックして呼出">📁 ${name}</span>
                 <div class="set-actions">
                     <button class="rename-btn" onclick="renameSet('${name}')">✏️</button>
                     <button class="load-btn" onclick="loadSet('${name}')">呼出</button>
                     <button class="delete-btn" onclick="deleteSet('${name}')">🗑️</button>
                 </div>
             `;
-
-            // iOS向けタッチ設定（左側のゾーンにのみ適用）
-            const touchZone = li.querySelector('.drag-touch-zone');
-            touchZone.addEventListener('touchstart', handleTouchStart, {passive: false});
-            touchZone.addEventListener('touchmove', handleTouchMove, {passive: false});
-            touchZone.addEventListener('touchend', handleTouchEnd);
-            
             list.appendChild(li);
         });
     }
