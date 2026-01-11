@@ -1466,7 +1466,7 @@ const RECIPES = [
     }
 
     function handleTouchMove(e) {
-        if (e.cancelable) e.preventDefault(); // Stop scrolling while dragging
+        if (e.preventDefault) { e.preventDefault(); } // Stop scrolling while dragging
         
         const touch = e.touches[0];
         const list = document.getElementById('saved-sets-list');
@@ -1547,7 +1547,6 @@ const RECIPES = [
             `;
             list.appendChild(li);
         });
-    }
         
         if(Object.keys(savedSets).length === 0) {
             list.innerHTML = '<li style="color:#999; padding:10px; text-align:center; font-size:0.8rem;">保存されたセットはありません</li>';
