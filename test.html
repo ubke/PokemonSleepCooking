@@ -345,7 +345,7 @@
 
         /* 1. ポップアップ全体（外枠）の設定 */
         #setModal .modal-content {
-            /* 高さとレイアウトの設定 */
+            /* レイアウト設定 */
             height: 70vh !important;
             max-height: 70vh !important;
             display: flex;
@@ -355,18 +355,18 @@
             /* 外枠自体のスクロールは禁止 */
             overflow: hidden !important; 
             
-            /* ★ここが修正点（iOS対策）：
-               ポップアップの背景やヘッダー（赤枠部分）を触っても
-               画面全体が揺れたり動いたりしないように「タッチ操作を無効化」します */
+            /* ★修正: ここにあった「touch-action: none」を削除しました！
+               これでリストのスクロールが復活します */
+        }
+        
+        /* 2. ヘッダー部分（タイトルと入力欄）だけをロック */
+        /* ここを触った時だけは、ポップアップが動かないように固定します */
+        #setModal .modal-content > h2,
+        #setModal .modal-content > .save-input-group {
             touch-action: none !important;
         }
         
-        /* 入力欄だけはタップやカーソル移動ができるように操作を許可 */
-        #setModal .modal-content input {
-            touch-action: manipulation !important;
-        }
-        
-        /* 2. リスト部分（中身）の設定 */
+        /* 3. リスト部分（中身）の設定 */
         #saved-sets-list {
             /* レイアウト設定 */
             flex-grow: 1 !important;
@@ -377,12 +377,10 @@
             
             /* スクロール設定 */
             overflow-y: auto !important; 
+            
+            /* iOS対策: スクロールを滑らかにし、端に達しても全体を動かさない */
             overscroll-behavior-y: contain !important;
             -webkit-overflow-scrolling: touch !important;
-        
-            /* ★ここが修正点：
-               親要素で「操作禁止(none)」にしましたが、
-               このリストの上だけは「縦スクロール(pan-y)していいよ」と許可を出します */
             touch-action: pan-y !important;
         }
         
