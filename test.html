@@ -343,41 +343,47 @@
 
         /* --- 料理セット管理画面のUI改善（リスト領域拡張版） --- */
 
-        /* 1. 外枠（ポップアップ全体）の設定 */
+        /* 1. ポップアップ全体（外枠）の設定 */
         #setModal .modal-content {
-            /* 高さを画面の70%に「固定」します（小さくしません） */
-            height: 70vh !important;      
+            /* 高さとレイアウトの設定 */
+            height: 70vh !important;
             max-height: 70vh !important;
-            
-            /* 中身を縦に並べてレイアウト制御 */
-            display: flex !important;
-            flex-direction: column !important;
-            
+            display: flex;
+            flex-direction: column;
             padding-bottom: 0 !important;
+            
+            /* 外枠自体のスクロールは禁止 */
             overflow: hidden !important; 
+            
+            /* ★ここが修正点（iOS対策）：
+               ポップアップの背景やヘッダー（赤枠部分）を触っても
+               画面全体が揺れたり動いたりしないように「タッチ操作を無効化」します */
+            touch-action: none !important;
         }
         
-        /* 2. 上のパーツ（タイトルや入力欄）はサイズ固定 */
-        #setModal .modal-content > h2,
-        #setModal .modal-content > .save-input-group,
-        #setModal .modal-content > .close-modal {
-            flex-shrink: 0 !important; 
+        /* 入力欄だけはタップやカーソル移動ができるように操作を許可 */
+        #setModal .modal-content input {
+            touch-action: manipulation !important;
         }
         
-        /* 3. リスト部分（iOS対策・操作エリア分離版） */
+        /* 2. リスト部分（中身）の設定 */
         #saved-sets-list {
-            /* リスト全体の表示設定 */
+            /* レイアウト設定 */
             flex-grow: 1 !important;
             height: auto !important;
             max-height: none !important;
-            overflow-y: auto !important; 
+            margin-top: 10px;
+            padding-bottom: 20px; 
             
-            /* iOSのスクロール連鎖を防ぐ（前回と同じ） */
+            /* スクロール設定 */
+            overflow-y: auto !important; 
             overscroll-behavior-y: contain !important;
             -webkit-overflow-scrolling: touch !important;
         
-            margin-top: 10px;
-            padding-bottom: 20px; 
+            /* ★ここが修正点：
+               親要素で「操作禁止(none)」にしましたが、
+               このリストの上だけは「縦スクロール(pan-y)していいよ」と許可を出します */
+            touch-action: pan-y !important;
         }
         
         /* --- ★ここが新しい変更点です★ --- */
