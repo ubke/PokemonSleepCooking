@@ -359,13 +359,6 @@
                これでリストのスクロールが復活します */
         }
         
-        /* 2. ヘッダー部分（タイトルと入力欄）だけをロック */
-        /* ここを触った時だけは、ポップアップが動かないように固定します */
-        #setModal .modal-content > h2,
-        #setModal .modal-content > .save-input-group {
-            touch-action: none !important;
-        }
-        
         /* 3. リスト部分（中身）の設定 */
         #saved-sets-list {
             /* レイアウト設定 */
@@ -377,25 +370,6 @@
             
             /* スクロール設定 */
             overflow-y: auto !important; 
-            
-            /* iOS対策: スクロールを滑らかにし、端に達しても全体を動かさない */
-            overscroll-behavior-y: contain !important;
-            -webkit-overflow-scrolling: touch !important;
-            touch-action: pan-y !important;
-        }
-        
-        /* --- ★ここが新しい変更点です★ --- */
-        
-        /* 1. リストの各行（青枠エリアの挙動） */
-        /* 基本的に「ここはドラッグする場所だから、スクロールは禁止！」と指示します */
-        #saved-sets-list li {
-            touch-action: none; 
-        }
-        
-        /* 2. 右側のボタン類（赤枠エリアの挙動） */
-        /* ボタンの上だけは「ここはスクロール操作に使っていいよ！」と上書き許可します */
-        #saved-sets-list li button {
-            touch-action: pan-y !important;
         }
         
         /* （スクロールバーのデザイン設定はそのまま） */
