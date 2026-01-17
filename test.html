@@ -1395,22 +1395,54 @@ const RECIPES = [
         renderSavedSets();
     }
 
-    // ★修正版: 確認なしで即座にセットを読み込む
+    // ★修正版: セット内容に合わせてフィルター条件（カテゴリ・エナジー）も自動変更する
     function loadSet(name) {
         const set = savedSets[name];
         if(set) {
-            // データ形式の補正（古いデータ対策）
+            // 1. データの適用（古いデータ形式への対応含む）
             RECIPES.forEach(r => {
                 if (set[r.id] === undefined) set[r.id] = 0;
             });
-            
-            // 状態を適用
             state = JSON.parse(JSON.stringify(set));
             
-            // 画面更新処理
-            adjustThresholdBasedOnState();
+            // 2. 自動調整ロジック（セット内の料理をスキャン）
+            const activeTypes = new Set();
+            let minEnergy = Infinity;
+            let hasSelection = false;
+
+            Object.keys(state).forEach(id => {
+                if (state[id] > 0) {
+                    const recipe = RECIPES.find(r => r.id === id);
+                    if (recipe) {
+                        hasSelection = true;
+                        // その料理のカテゴリ（カレー等）を記録
+                        activeTypes.add(recipe.type);
+                        // 一番低いエナジーを探す
+                        if (recipe.energy < minEnergy) {
+                            minEnergy = recipe.energy;
+                        }
+                    }
+                }
+            });
+
+            // ▼カテゴリボタンの自動切り替え
+            if (activeTypes.size > 0) {
+                activeCategories = activeTypes;
+                updateFilterButtons(); // ボタンの見た目を更新
+            }
+
+            // ▼基準エナジーの自動調整
+            if (hasSelection && minEnergy !== Infinity) {
+                const input = document.getElementById('energy-threshold');
+                // 最低エナジーが含まれる「千の位」に合わせる計算
+                // (例: 6793 - 1 = 6792 → /1000 = 6.792 → floorで6 → *1000 = 6000)
+                const newThreshold = Math.floor((minEnergy - 1) / 1000) * 1000;
+                input.value = Math.max(0, newThreshold);
+            }
+
+            // 3. 保存と画面更新（フィルター適用）
             saveAndUpdate();
-            closeModal(); // ポップアップを閉じる
+            closeModal();
         }
     }
 
