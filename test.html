@@ -1846,13 +1846,11 @@ const RECIPES = [
         updateCalculation(); // 画面を更新してスタイル（打ち消し線など）を反映
     }
 
-    // ★追加: チェックボックスだけを全て外す
+    // ★修正版: 確認なしで即座にチェックを外す
     function clearChecks() {
-        if(confirm("チェックを全て外しますか？")) {
-            checkedIngs = {};
-            localStorage.setItem('pokeSleepCheckedIngs', JSON.stringify(checkedIngs));
-            updateCalculation();
-        }
+        checkedIngs = {};
+        localStorage.setItem('pokeSleepCheckedIngs', JSON.stringify(checkedIngs));
+        updateCalculation();
     }
 
     init();
