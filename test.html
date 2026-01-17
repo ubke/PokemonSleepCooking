@@ -1395,19 +1395,22 @@ const RECIPES = [
         renderSavedSets();
     }
 
+    // ★修正版: 確認なしで即座にセットを読み込む
     function loadSet(name) {
-        if(confirm(`セット「${name}」を読み込みますか？\n現在の選択内容は上書きされます。`)) {
-            const set = savedSets[name];
-            if(set) {
-                RECIPES.forEach(r => {
-                    if (set[r.id] === undefined) set[r.id] = 0;
-                });
-                state = JSON.parse(JSON.stringify(set));
-                
-                adjustThresholdBasedOnState();
-                saveAndUpdate();
-                closeModal();
-            }
+        const set = savedSets[name];
+        if(set) {
+            // データ形式の補正（古いデータ対策）
+            RECIPES.forEach(r => {
+                if (set[r.id] === undefined) set[r.id] = 0;
+            });
+            
+            // 状態を適用
+            state = JSON.parse(JSON.stringify(set));
+            
+            // 画面更新処理
+            adjustThresholdBasedOnState();
+            saveAndUpdate();
+            closeModal(); // ポップアップを閉じる
         }
     }
 
