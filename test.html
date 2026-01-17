@@ -1729,8 +1729,16 @@ const RECIPES = [
         saveAndUpdate();
     }
 
+    // ★修正版: 料理の選択と、チェックボックスの両方をリセットする
     function resetAll() {
+        // 1. 料理の選択をリセット
         Object.keys(state).forEach(k => state[k] = 0);
+        
+        // 2. チェックボックスの状態もリセット（★ここを追加）
+        checkedIngs = {};
+        localStorage.setItem('pokeSleepCheckedIngs', JSON.stringify(checkedIngs));
+        
+        // 3. 保存して画面更新
         saveAndUpdate();
     }
 
