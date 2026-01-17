@@ -1440,6 +1440,10 @@ const RECIPES = [
                 input.value = Math.max(0, newThreshold);
             }
 
+            // チェックボックスの状態をリセットして保存
+            checkedIngs = {};
+            localStorage.setItem('pokeSleepCheckedIngs', JSON.stringify(checkedIngs));
+
             // 3. 保存と画面更新（フィルター適用）
             saveAndUpdate();
             closeModal();
