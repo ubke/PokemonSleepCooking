@@ -212,6 +212,32 @@
         .ing-name { font-weight: 600; font-size: 0.95rem; }
         .ing-count { font-weight: bold; font-size: 1rem; }
 
+        /* --- 追加: チェックボックスと新しいボタンのスタイル --- */
+        .check-clear-btn {
+            background: #FFB74D; /* オレンジ色 */
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-right: 8px; /* 隣のボタンとの隙間 */
+        }
+        
+        .ing-checkbox {
+            transform: scale(1.3); /* スマホで押しやすいように少し大きく */
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        /* チェックされた時の見た目（薄くする） */
+        .ingredient-item.checked {
+            opacity: 0.6;
+            background-color: #f5f5f5;
+            text-decoration: line-through; /* 完了した感じを出す */
+        }
+      
         /* Modal Styles */
         .modal {
             display: none;
@@ -440,7 +466,10 @@
         <div>
             <span style="font-weight:bold; font-size: 1rem;">選択: <span id="total-meals">0</span>食</span>
         </div>
-        <button class="reset-btn" onclick="resetAll()">オールクリア</button>
+        <div style="display:flex;">
+            <button class="check-clear-btn" onclick="clearChecks()">チェッククリア</button>
+            <button class="reset-btn" onclick="resetAll()">オールクリア</button>
+        </div>
     </div>
 </div>
 
@@ -1296,6 +1325,9 @@ const RECIPES = [
     let savedSets = {};
     let activeCategories = new Set(['カレー', 'サラダ', 'デザート']);
 
+    // ★追加: チェックボックスの状態を管理する変数
+    let checkedIngs = {};
+  
     // === 初期化 ===
     function init() {
         const saved = localStorage.getItem('pokeSleepPlanner');
@@ -1303,6 +1335,12 @@ const RECIPES = [
             state = JSON.parse(saved);
         } else {
             RECIPES.forEach(r => state[r.id] = 0);
+        }
+
+        // ★追加: 保存されたチェック状態を読み込む
+        const savedChecks = localStorage.getItem('pokeSleepCheckedIngs');
+        if(savedChecks) {
+            checkedIngs = JSON.parse(savedChecks);
         }
         
         initSavedSets();
@@ -1357,19 +1395,58 @@ const RECIPES = [
         renderSavedSets();
     }
 
+    // ★修正版: セット内容に合わせてフィルター条件（カテゴリ・エナジー）も自動変更する
     function loadSet(name) {
-        if(confirm(`セット「${name}」を読み込みますか？\n現在の選択内容は上書きされます。`)) {
-            const set = savedSets[name];
-            if(set) {
-                RECIPES.forEach(r => {
-                    if (set[r.id] === undefined) set[r.id] = 0;
-                });
-                state = JSON.parse(JSON.stringify(set));
-                
-                adjustThresholdBasedOnState();
-                saveAndUpdate();
-                closeModal();
+        const set = savedSets[name];
+        if(set) {
+            // 1. データの適用（古いデータ形式への対応含む）
+            RECIPES.forEach(r => {
+                if (set[r.id] === undefined) set[r.id] = 0;
+            });
+            state = JSON.parse(JSON.stringify(set));
+            
+            // 2. 自動調整ロジック（セット内の料理をスキャン）
+            const activeTypes = new Set();
+            let minEnergy = Infinity;
+            let hasSelection = false;
+
+            Object.keys(state).forEach(id => {
+                if (state[id] > 0) {
+                    const recipe = RECIPES.find(r => r.id === id);
+                    if (recipe) {
+                        hasSelection = true;
+                        // その料理のカテゴリ（カレー等）を記録
+                        activeTypes.add(recipe.type);
+                        // 一番低いエナジーを探す
+                        if (recipe.energy < minEnergy) {
+                            minEnergy = recipe.energy;
+                        }
+                    }
+                }
+            });
+
+            // ▼カテゴリボタンの自動切り替え
+            if (activeTypes.size > 0) {
+                activeCategories = activeTypes;
+                updateFilterButtons(); // ボタンの見た目を更新
             }
+
+            // ▼基準エナジーの自動調整
+            if (hasSelection && minEnergy !== Infinity) {
+                const input = document.getElementById('energy-threshold');
+                // 最低エナジーが含まれる「千の位」に合わせる計算
+                // (例: 6793 - 1 = 6792 → /1000 = 6.792 → floorで6 → *1000 = 6000)
+                const newThreshold = Math.floor((minEnergy - 1) / 1000) * 1000;
+                input.value = Math.max(0, newThreshold);
+            }
+
+            // チェックボックスの状態をリセットして保存
+            checkedIngs = {};
+            localStorage.setItem('pokeSleepCheckedIngs', JSON.stringify(checkedIngs));
+
+            // 3. 保存と画面更新（フィルター適用）
+            saveAndUpdate();
+            closeModal();
         }
     }
 
@@ -1688,8 +1765,16 @@ const RECIPES = [
         saveAndUpdate();
     }
 
+    // ★修正版: 料理の選択と、チェックボックスの両方をリセットする
     function resetAll() {
+        // 1. 料理の選択をリセット
         Object.keys(state).forEach(k => state[k] = 0);
+        
+        // 2. チェックボックスの状態もリセット（★ここを追加）
+        checkedIngs = {};
+        localStorage.setItem('pokeSleepCheckedIngs', JSON.stringify(checkedIngs));
+        
+        // 3. 保存して画面更新
         saveAndUpdate();
     }
 
@@ -1759,11 +1844,20 @@ const RECIPES = [
         } else {
             neededKeys.forEach(ing => {
                 const li = document.createElement('li');
-                li.className = 'ingredient-item needed-tag';
+              
+                // ★変更: チェック済みならクラスをつけて見た目を変える
+                const isChecked = checkedIngs[ing] ? 'checked' : '';
+                const checkedClass = checkedIngs[ing] ? ' checked' : '';
+                
+                li.className = 'ingredient-item needed-tag' + checkedClass;
                 const icon = ING_ICONS[ing] || '📦';
                 
+                // ★変更: チェックボックス(<input>)を追加し、クリック時にtoggleCheck関数を呼ぶ
                 li.innerHTML = `
-                    <span class="ing-name">${icon} ${ing}</span>
+                    <div style="display:flex; align-items:center;">
+                        <input type="checkbox" class="ing-checkbox" ${isChecked} onchange="toggleCheck('${ing}')">
+                        <span class="ing-name">${icon} ${ing}</span>
+                    </div>
                     <span class="ing-count">${finalIngredients[ing]}個</span>
                 `;
                 neededList.appendChild(li);
@@ -1786,6 +1880,24 @@ const RECIPES = [
         });
 
         document.getElementById('total-meals').textContent = totalMeals;
+    }
+
+    // ★追加: チェックボックスのON/OFFを切り替えて保存する
+    function toggleCheck(ing) {
+        if (checkedIngs[ing]) {
+            delete checkedIngs[ing];
+        } else {
+            checkedIngs[ing] = true;
+        }
+        localStorage.setItem('pokeSleepCheckedIngs', JSON.stringify(checkedIngs));
+        updateCalculation(); // 画面を更新してスタイル（打ち消し線など）を反映
+    }
+
+    // ★修正版: 確認なしで即座にチェックを外す
+    function clearChecks() {
+        checkedIngs = {};
+        localStorage.setItem('pokeSleepCheckedIngs', JSON.stringify(checkedIngs));
+        updateCalculation();
     }
 
     init();
