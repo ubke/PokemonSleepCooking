@@ -123,6 +123,72 @@
         }
         #hidden-alert.alert-active { color: var(--alert-color); font-weight: bold; }
 
+        /* 非表示料理数と、使用食材表示チェックボックス */
+        .status-row {
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .status-row #hidden-alert {
+            margin-top: 0;
+        }
+        
+        .ingredient-display-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #555;
+            font-size: 0.85rem;
+            font-weight: bold;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        
+        .ingredient-display-toggle input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+        
+        /* 食材表示中は、料理カードの横幅を少し広げる */
+        .recipe-grid.ingredients-visible {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+        
+        .recipe-ingredients {
+            margin: 4px 2px 2px;
+            padding-top: 5px;
+            border-top: 1px solid #eee;
+            display: grid;
+            gap: 3px;
+            color: #555;
+            font-size: 0.68rem;
+            line-height: 1.3;
+            text-align: left;
+        }
+        
+        .recipe-ingredient {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 4px;
+        }
+        
+        .recipe-ingredient > span {
+            min-width: 0;
+        }
+        
+        .recipe-ingredient strong {
+            color: #333;
+            white-space: nowrap;
+        }
+
         .recipe-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -436,7 +502,18 @@
             <span>以下を非表示</span>
         </div>
 
-        <div id="hidden-alert">選択済みの非表示料理：0</div>
+        <div class="status-row">
+            <div id="hidden-alert">選択済みの非表示料理：0</div>
+        
+            <label for="show-ingredients" class="ingredient-display-toggle">
+                使用食材表示
+                <input
+                    type="checkbox"
+                    id="show-ingredients"
+                    onchange="applyFilters()"
+                >
+            </label>
+        </div>
     </div>
 
     <div id="recipe-list" class="recipe-grid">
@@ -1402,8 +1479,18 @@ const RECIPES = [
             checkedIngs = JSON.parse(savedChecks);
         }
         
+        // 保存されている基準エナジーを読み込む
+        const savedThreshold = localStorage.getItem('pokeSleepEnergyThreshold');
+        
+        if (savedThreshold !== null) {
+            document.getElementById('energy-threshold').value = savedThreshold;
+        }
+        
         initSavedSets();
-        adjustThresholdBasedOnState();
+        
+        // この呼び出しは削除する
+        // adjustThresholdBasedOnState();
+        
         updateFilterButtons();
         applyFilters();
         updateCalculation();
@@ -1773,11 +1860,24 @@ const RECIPES = [
     }
 
     function applyFilters() {
-        const threshold = parseInt(document.getElementById('energy-threshold').value) || 0;
+        const thresholdInput = document.getElementById('energy-threshold');
+        const threshold = parseInt(thresholdInput.value) || 0;
+    
+        // 現在の基準エナジーを保存
+        localStorage.setItem(
+            'pokeSleepEnergyThreshold',
+            thresholdInput.value
+        );
         
         const container = document.getElementById('recipe-list');
+    
+        const showIngredients =
+            document.getElementById('show-ingredients').checked;
+    
+        container.classList.toggle('ingredients-visible', showIngredients);
+    
         container.innerHTML = '';
-
+    
         const filtered = RECIPES.filter(r => {
             const typeMatch = activeCategories.has(r.type);
             const energyMatch = r.energy > threshold; 
@@ -1798,6 +1898,21 @@ const RECIPES = [
             const imgPath = `images/${recipe.name}.png`;
             const totalIng = Object.values(recipe.ingredients).reduce((sum, num) => sum + num, 0);
 
+            const ingredientDetails = showIngredients
+                ? `
+                    <div class="recipe-ingredients">
+                        ${Object.entries(recipe.ingredients)
+                            .map(([ing, num]) => `
+                                <div class="recipe-ingredient">
+                                    <span>${ING_ICONS[ing] || '📦'} ${ing}</span>
+                                    <strong>${num}個</strong>
+                                </div>
+                            `)
+                            .join('')}
+                    </div>
+                `
+                : '';
+
             div.innerHTML = `
                 <div class="recipe-meta">
                     <span class="meta-energy">⚡${recipe.energy.toLocaleString()}</span>
@@ -1805,6 +1920,7 @@ const RECIPES = [
                 </div>
                 <img src="${imgPath}" alt="${recipe.name}" class="recipe-img" onerror="this.style.display='none'">
                 <div class="recipe-name">${recipe.name}</div>
+                ${ingredientDetails}
                 <div class="count-badge ${count === 0 ? 'hidden' : ''}">${count}</div>
                 <div class="card-controls ${count > 0 ? '' : 'hidden'}">
                     <button class="sub-btn" onclick="decrement('${recipe.id}')">－</button>
