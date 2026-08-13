@@ -1479,8 +1479,18 @@ const RECIPES = [
             checkedIngs = JSON.parse(savedChecks);
         }
         
+        // 保存されている基準エナジーを読み込む
+        const savedThreshold = localStorage.getItem('pokeSleepEnergyThreshold');
+        
+        if (savedThreshold !== null) {
+            document.getElementById('energy-threshold').value = savedThreshold;
+        }
+        
         initSavedSets();
-        adjustThresholdBasedOnState();
+        
+        // この呼び出しは削除する
+        // adjustThresholdBasedOnState();
+        
         updateFilterButtons();
         applyFilters();
         updateCalculation();
@@ -1850,15 +1860,20 @@ const RECIPES = [
     }
 
     function applyFilters() {
-        const threshold = parseInt(document.getElementById('energy-threshold').value) || 0;
+        const thresholdInput = document.getElementById('energy-threshold');
+        const threshold = parseInt(thresholdInput.value) || 0;
+    
+        // 現在の基準エナジーを保存
+        localStorage.setItem(
+            'pokeSleepEnergyThreshold',
+            thresholdInput.value
+        );
         
         const container = document.getElementById('recipe-list');
     
-        // 「使用食材表示」チェックボックスの状態を取得
         const showIngredients =
             document.getElementById('show-ingredients').checked;
     
-        // 食材表示時だけ料理カードの横幅を広げる
         container.classList.toggle('ingredients-visible', showIngredients);
     
         container.innerHTML = '';
